@@ -10,7 +10,7 @@
 
 ## Introduction
 
-*dockerfiler* is a Dockerfile generator of [craftslab](https://github.com/craftslab) written in Go.
+*dockerfiler* is a Dockerfile generator written in Go.
 
 
 
@@ -42,9 +42,7 @@ container-diff diff --type=apt --type=node --type=pip --json \
 
 ```bash
 version=latest make build
-./bin/dockerfiler --config-file=/path/to/config.yml \
-  --input-image1=/path/to/image1 --input-image2=/path/to/image2 \
-  --output-file=/path/to/file
+./bin/dockerfiler --input-image1=image1 --input-image2=image2 --output-file=/path/to/Dockerfile
 ```
 
 
@@ -60,21 +58,7 @@ TBD
 ## Example
 
 ```bash
-dockerfiler --config-file="$PWD"/test/config/config.yml \
-  --input-image1=daemon://ubuntu:22.04 --input-image2=daemon://ubuntu:23.04 \
-  --output-file=Dockerfile
-```
-
-
-
-## Settings
-
-*dockerfiler* parameters can be set in the directory [config](https://github.com/craftslab/dockerfiler/blob/main/config).
-
-An example of configuration in [config.yml](https://github.com/craftslab/dockerfiler/blob/main/config/config.yml):
-
-```yaml
-TBD
+dockerfiler --input-image1=daemon://ubuntu:22.04 --input-image2=daemon://ubuntu:23.04 --output-file=Dockerfile
 ```
 
 
