@@ -29,20 +29,13 @@ sudo install container-diff-linux-amd64 /usr/local/bin/container-diff
 
 
 
-## Test
-
-```bash
-container-diff diff --type=apt --type=node --type=pip --json \
-  daemon://ubuntu:22.04 daemon://ubuntu:23.04 > diff.json
-```
-
-
-
 ## Run
 
 ```bash
+container-diff diff --type=apt --type=node --type=pip --json daemon://image1 daemon://image2 > diff.json
+
 version=latest make build
-./bin/dockerfiler --input-image1=image1 --input-image2=image2 --output-file=/path/to/Dockerfile
+./bin/dockerfiler --input-file=diff.json --output-file=Dockerfile
 ```
 
 
@@ -50,7 +43,17 @@ version=latest make build
 ## Usage
 
 ```
-TBD
+usage: dockerfiler --input-file=INPUT-FILE --output-file=OUTPUT-FILE [<flags>]
+
+Dockerfile generator
+
+
+Flags:
+  --[no-]help                Show context-sensitive help (also try --help-long
+                             and --help-man).
+  --[no-]version             Show application version.
+  --input-file=INPUT-FILE    Input file (.json)
+  --output-file=OUTPUT-FILE  Output file (Dockerfile)
 ```
 
 
@@ -58,7 +61,8 @@ TBD
 ## Example
 
 ```bash
-dockerfiler --input-image1=daemon://ubuntu:22.04 --input-image2=daemon://ubuntu:23.04 --output-file=Dockerfile
+container-diff diff --type=apt --type=node --type=pip --json daemon://ubuntu:22.04 daemon://ubuntu:23.04 > diff.json
+dockerfiler --input-file=diff.json --output-file=Dockerfile
 ```
 
 
