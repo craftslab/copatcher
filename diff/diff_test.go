@@ -1,4 +1,4 @@
-package config
+package diff
 
 import (
 	"testing"
@@ -6,6 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestConfig(t *testing.T) {
+func TestDiff(t *testing.T) {
 	assert.Equal(t, nil, nil)
 }
