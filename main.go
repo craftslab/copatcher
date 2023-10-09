@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/craftslab/dockerfiler/cmd"
+	"github.com/craftslab/copatcher/cmd"
 )
 
 func main() {

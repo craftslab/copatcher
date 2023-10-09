@@ -1,16 +1,16 @@
-# dockerfiler
+# copatcher
 
-[![Build Status](https://github.com/craftslab/dockerfiler/workflows/ci/badge.svg?branch=main&event=push)](https://github.com/craftslab/dockerfiler/actions?query=workflow%3Aci)
-[![codecov](https://codecov.io/gh/craftslab/dockerfiler/branch/main/graph/badge.svg?token=7PMQALLZLY)](https://codecov.io/gh/craftslab/dockerfiler)
-[![Go Report Card](https://goreportcard.com/badge/github.com/craftslab/dockerfiler)](https://goreportcard.com/report/github.com/craftslab/dockerfiler)
-[![License](https://img.shields.io/github/license/craftslab/dockerfiler.svg)](https://github.com/craftslab/dockerfiler/blob/main/LICENSE)
-[![Tag](https://img.shields.io/github/tag/craftslab/dockerfiler.svg)](https://github.com/craftslab/dockerfiler/tags)
+[![Build Status](https://github.com/craftslab/copatcher/workflows/ci/badge.svg?branch=main&event=push)](https://github.com/craftslab/copatcher/actions?query=workflow%3Aci)
+[![codecov](https://codecov.io/gh/craftslab/copatcher/branch/main/graph/badge.svg?token=7PMQALLZLY)](https://codecov.io/gh/craftslab/copatcher)
+[![Go Report Card](https://goreportcard.com/badge/github.com/craftslab/copatcher)](https://goreportcard.com/report/github.com/craftslab/copatcher)
+[![License](https://img.shields.io/github/license/craftslab/copatcher.svg)](https://github.com/craftslab/copatcher/blob/main/LICENSE)
+[![Tag](https://img.shields.io/github/tag/craftslab/copatcher.svg)](https://github.com/craftslab/copatcher/tags)
 
 
 
 ## Introduction
 
-*dockerfiler* is a Dockerfile generator written in Go.
+*copatcher* is a container patcher written in Go.
 
 
 
@@ -35,7 +35,7 @@ sudo install container-diff-linux-amd64 /usr/local/bin/container-diff
 container-diff diff --type=apt --type=node --type=pip --json daemon://image1 daemon://image2 > diff.json
 
 version=latest make build
-./bin/dockerfiler --container-diff=diff.json --output-file=Dockerfile
+./bin/copatcher --container-diff=diff.json --output-file=Dockerfile
 ```
 
 
@@ -43,14 +43,13 @@ version=latest make build
 ## Usage
 
 ```
-usage: dockerfiler --container-diff=CONTAINER-DIFF --output-file=OUTPUT-FILE [<flags>]
+usage: copatcher --container-diff=CONTAINER-DIFF --output-file=OUTPUT-FILE [<flags>]
 
-Dockerfile generator
+Container patcher
 
 
 Flags:
-  --[no-]help                Show context-sensitive help (also try --help-long
-                             and --help-man).
+  --[no-]help                Show context-sensitive help (also try --help-long and --help-man).
   --[no-]version             Show application version.
   --container-diff=CONTAINER-DIFF
                              Container difference (.json)
@@ -63,7 +62,7 @@ Flags:
 
 ```bash
 container-diff diff --type=apt --type=node --type=pip --json daemon://ubuntu:22.04 daemon://ubuntu:23.04 > diff.json
-dockerfiler --container-diff=diff.json --output-file=Dockerfile
+copatcher --container-diff=diff.json --output-file=Dockerfile
 ```
 
 
@@ -77,4 +76,5 @@ Project License can be found [here](LICENSE).
 ## Reference
 
 - [container-diff](https://github.com/GoogleContainerTools/container-diff)
+- [copacetic](https://project-copacetic.github.io/copacetic/website/)
 - [dockerfile-generator](https://www.startwithdocker.com/)

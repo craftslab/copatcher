@@ -17,7 +17,7 @@ func TestInitDiffer(t *testing.T) {
 	assert.Equal(t, nil, nil)
 }
 
-func TestInitFiler(t *testing.T) {
+func TestInitPatcher(t *testing.T) {
 	_ = context.Background()
 	assert.Equal(t, nil, nil)
 }

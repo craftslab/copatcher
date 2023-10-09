@@ -9,13 +9,13 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/pkg/errors"
 
-	"github.com/craftslab/dockerfiler/config"
-	"github.com/craftslab/dockerfiler/differ"
-	"github.com/craftslab/dockerfiler/filer"
+	"github.com/craftslab/copatcher/config"
+	"github.com/craftslab/copatcher/differ"
+	"github.com/craftslab/copatcher/patcher"
 )
 
 var (
-	app           = kingpin.New("dockerfiler", "Dockerfile generator").Version(config.Version + "-build-" + config.Build)
+	app           = kingpin.New("copatcher", "Container patcher").Version(config.Version + "-build-" + config.Build)
 	containerDiff = app.Flag("container-diff", "Container difference (.json)").Required().String()
 	outputFile    = app.Flag("output-file", "Output file (Dockerfile)").Required().String()
 )
@@ -33,13 +33,13 @@ func Run(ctx context.Context) error {
 		return errors.Wrap(err, "failed to init differ")
 	}
 
-	f, err := initFiler(ctx, cfg, d)
+	p, err := initPatcher(ctx, cfg, d)
 	if err != nil {
-		return errors.Wrap(err, "failed to init filer")
+		return errors.Wrap(err, "failed to init patcher")
 	}
 
-	if err := runFiler(ctx, f); err != nil {
-		return errors.Wrap(err, "failed to run filer")
+	if err := runPatcher(ctx, p); err != nil {
+		return errors.Wrap(err, "failed to run patcher")
 	}
 
 	return nil
@@ -71,25 +71,25 @@ func initDiffer(_ context.Context, _ *config.Config, name string) (*[]differ.Dif
 	return d, nil
 }
 
-func initFiler(ctx context.Context, cfg *config.Config, diff *[]differ.Differ) (filer.Filer, error) {
-	c := filer.DefaultConfig()
+func initPatcher(ctx context.Context, cfg *config.Config, diff *[]differ.Differ) (patcher.Patcher, error) {
+	c := patcher.DefaultConfig()
 
 	c.Config = *cfg
 	c.Differ = diff
 
-	return filer.New(ctx, c), nil
+	return patcher.New(ctx, c), nil
 }
 
-func runFiler(ctx context.Context, file filer.Filer) error {
-	if err := file.Init(ctx); err != nil {
+func runPatcher(ctx context.Context, pat patcher.Patcher) error {
+	if err := pat.Init(ctx); err != nil {
 		return errors.Wrap(err, "failed to init")
 	}
 
-	defer func(file filer.Filer, ctx context.Context) {
-		_ = file.Deinit(ctx)
-	}(file, ctx)
+	defer func(pat patcher.Patcher, ctx context.Context) {
+		_ = pat.Deinit(ctx)
+	}(pat, ctx)
 
-	err := file.Run(ctx, *outputFile)
+	err := pat.Run(ctx, *outputFile)
 	if err != nil {
 		return errors.Wrap(err, "failed to run")
 	}

@@ -3,8 +3,8 @@
 build=$(date +%FT%T%z)
 version="$1"
 
-ldflags="-s -w -X github.com/craftslab/dockerfiler/config.Build=$build -X github.com/craftslab/dockerfiler/config.Version=$version"
-target="dockerfiler"
+ldflags="-s -w -X github.com/craftslab/copatcher/config.Build=$build -X github.com/craftslab/copatcher/config.Version=$version"
+target="copatcher"
 
 go env -w GOPROXY=https://goproxy.cn,direct
 

@@ -1,4 +1,4 @@
-package filer
+package patcher
 
 import (
 	"context"
@@ -6,11 +6,11 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/craftslab/dockerfiler/config"
-	"github.com/craftslab/dockerfiler/differ"
+	"github.com/craftslab/copatcher/config"
+	"github.com/craftslab/copatcher/differ"
 )
 
-type Filer interface {
+type Patcher interface {
 	Init(context.Context) error
 	Deinit(context.Context) error
 	Run(context.Context, string) error
@@ -21,12 +21,12 @@ type Config struct {
 	Differ *[]differ.Differ
 }
 
-type filer struct {
+type patcher struct {
 	cfg *Config
 }
 
-func New(_ context.Context, cfg *Config) Filer {
-	return &filer{
+func New(_ context.Context, cfg *Config) Patcher {
+	return &patcher{
 		cfg: cfg,
 	}
 }
@@ -35,15 +35,15 @@ func DefaultConfig() *Config {
 	return &Config{}
 }
 
-func (f *filer) Init(_ context.Context) error {
+func (p *patcher) Init(_ context.Context) error {
 	return nil
 }
 
-func (f *filer) Deinit(_ context.Context) error {
+func (p *patcher) Deinit(_ context.Context) error {
 	return nil
 }
 
-func (f *filer) Run(_ context.Context, name string) error {
+func (p *patcher) Run(_ context.Context, name string) error {
 	if _, err := os.Stat(name); err == nil {
 		return errors.New("file exists already")
 	}

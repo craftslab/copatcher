@@ -1,4 +1,4 @@
-module github.com/craftslab/dockerfiler
+module github.com/craftslab/copatcher
 
 go 1.18
 

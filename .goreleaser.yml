@@ -1,6 +1,6 @@
 ---
 builds:
-  - id: dockerfiler
+  - id: copatcher
     env:
       - CGO_ENABLED=0
     goos:
@@ -11,10 +11,10 @@ builds:
       - amd64
     dir: .
     main: main.go
-    binary: dockerfiler
+    binary: copatcher
     flags:
       - -trimpath
-    ldflags: -s -w -X github.com/craftslab/dockerfiler/config.Build={{.Date}} -X github.com/craftslab/dockerfiler/config.Version={{.Version}}
+    ldflags: -s -w -X github.com/craftslab/copatcher/config.Build={{.Date}} -X github.com/craftslab/copatcher/config.Version={{.Version}}
 
 dockers:
   - image_templates: ["ghcr.io/craftslab/{{ .ProjectName }}:{{ .Tag }}-amd64"]
