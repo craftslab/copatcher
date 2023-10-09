@@ -40,6 +40,15 @@ version=latest make build
 
 
 
+## Docker
+
+```bash
+version=latest make docker
+docker run ghcr.io/craftslab/copatcher:latest
+```
+
+
+
 ## Usage
 
 ```
