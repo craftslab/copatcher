@@ -25,6 +25,7 @@
 ```bash
 # container-diff
 curl -LO https://storage.googleapis.com/container-diff/latest/container-diff-linux-amd64
+chmod +x container-diff-linux-amd64
 sudo install container-diff-linux-amd64 /usr/local/bin/container-diff
 
 # buildkit
