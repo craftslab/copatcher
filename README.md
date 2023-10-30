@@ -37,18 +37,23 @@ docker pull moby/buildkit:latest
 
 ```bash
 # container-diff
-container-diff diff --type=apt --type=node --type=pip --json daemon://ubuntu:22.04 daemon://ubuntu:23.04 > diff.json
+container-diff diff --type=apt --type=node --type=pip \
+  --json daemon://ubuntu:22.04 daemon://ubuntu:23.04 > diff.json
 
 # buildkit
-docker run --detach --rm --privileged --name buildkitd --entrypoint buildkitd moby/buildkit:latest
+docker run --detach --rm --privileged --name buildkitd \
+  --entrypoint buildkitd moby/buildkit:latest
 # OR
-docker run --detach --rm --privileged -p 127.0.0.1:8888:8888/tcp --name buildkitd --entrypoint buildkitd moby/buildkit:latest --addr tcp://0.0.0.0:8888
+docker run --detach --rm --privileged -p 127.0.0.1:8888:8888/tcp --name buildkitd \
+  --entrypoint buildkitd moby/buildkit:latest --addr tcp://0.0.0.0:8888
 
 # copatcher
 version=latest make build
-./bin/copatcher --image ubuntu:22.04 --report diff.json --tag 22.04-patched --timeout 5m --addr docker-container://buildkitd --ignore-errors
+./bin/copatcher --image ubuntu:22.04 --report diff.json --tag 22.04-patched --timeout 5m \
+  --addr docker-container://buildkitd --ignore-errors
 # OR
-./bin/copatcher --image ubuntu:22.04 --report diff.json --tag 22.04-patched --timeout 5m --addr tcp://0.0.0.0:8888 --ignore-errors
+./bin/copatcher --image ubuntu:22.04 --report diff.json --tag 22.04-patched --timeout 5m \
+  --addr tcp://0.0.0.0:8888 --ignore-errors
 ```
 
 
