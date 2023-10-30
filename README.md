@@ -33,23 +33,42 @@ docker pull moby/buildkit:latest
 
 
 
+## Update
+
+```bash
+# Install packages
+docker run -it --rm --name ubuntu-22.04-container ubuntu:22.04 /bin/bash
+
+$ apt update && \
+  apt install tmux && \
+  apt install python3-pip && \
+  apt install nodejs && \
+  apt install npm && \
+  npm install -g eslint && \
+  pip install flake8
+
+# Run Commit
+docker commit -m "Create new image from container's changes" \
+  ubuntu-22.04-container ubuntu:22.04-updated
+```
+
+
+
 ## Run
 
 ```bash
-# container-diff
-docker commit -m "Create new image from container's changes" \
-  ubuntu-22.04-container ubuntu:22.04-updated
+# Run container-diff
 container-diff diff --type=apt --type=node --type=pip --json \
   daemon://ubuntu:22.04 daemon://ubuntu:22.04-updated > report.json
 
-# buildkit
+# Run buildkit
 docker run --detach --rm --privileged --name buildkitd \
   --entrypoint buildkitd moby/buildkit:latest
 # OR
 docker run --detach --rm --privileged -p 127.0.0.1:8888:8888/tcp --name buildkitd \
   --entrypoint buildkitd moby/buildkit:latest --addr tcp://0.0.0.0:8888
 
-# copatcher
+# Run copatcher
 version=latest make build
 ./bin/copatcher --image ubuntu:22.04 --report report.json --tag 22.04-patched --timeout "5m" \
   --addr "docker-container://buildkitd" --ignore-errors
