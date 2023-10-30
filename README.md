@@ -37,8 +37,8 @@ docker pull moby/buildkit:latest
 
 ```bash
 # container-diff
-container-diff diff --type=apt --type=node --type=pip \
-  --json daemon://ubuntu:22.04 daemon://ubuntu:23.04 > diff.json
+container-diff diff --type=apt --type=node --type=pip --json \
+  daemon://ubuntu:22.04 daemon://ubuntu:23.04 > diff.json
 
 # buildkit
 docker run --detach --rm --privileged --name buildkitd \
