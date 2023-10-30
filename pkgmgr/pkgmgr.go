@@ -1,4 +1,4 @@
-package patcher
+package pkgmgr
 
 import (
 	"context"
@@ -6,11 +6,7 @@ import (
 	"github.com/craftslab/copatcher/config"
 )
 
-const (
-	DefaultTimeout = "5m"
-)
-
-type Patcher interface {
+type Pkgmgr interface {
 	Init(context.Context) error
 	Deinit(context.Context) error
 	Run(context.Context) error
@@ -20,12 +16,12 @@ type Config struct {
 	Config config.Config
 }
 
-type patcher struct {
+type pkgmgr struct {
 	cfg *Config
 }
 
-func New(_ context.Context, cfg *Config) Patcher {
-	return &patcher{
+func New(_ context.Context, cfg *Config) Pkgmgr {
+	return &pkgmgr{
 		cfg: cfg,
 	}
 }
@@ -34,14 +30,14 @@ func DefaultConfig() *Config {
 	return &Config{}
 }
 
-func (p *patcher) Init(_ context.Context) error {
+func (p *pkgmgr) Init(_ context.Context) error {
 	return nil
 }
 
-func (p *patcher) Deinit(_ context.Context) error {
+func (p *pkgmgr) Deinit(_ context.Context) error {
 	return nil
 }
 
-func (p *patcher) Run(_ context.Context) error {
+func (p *pkgmgr) Run(_ context.Context) error {
 	return nil
 }

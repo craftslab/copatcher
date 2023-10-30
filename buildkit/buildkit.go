@@ -1,4 +1,4 @@
-package patcher
+package buildkit
 
 import (
 	"context"
@@ -7,10 +7,10 @@ import (
 )
 
 const (
-	DefaultTimeout = "5m"
+	DefaultAddr = "unix:///run/buildkit/buildkitd.sock"
 )
 
-type Patcher interface {
+type Buildkit interface {
 	Init(context.Context) error
 	Deinit(context.Context) error
 	Run(context.Context) error
@@ -20,12 +20,12 @@ type Config struct {
 	Config config.Config
 }
 
-type patcher struct {
+type buildkit struct {
 	cfg *Config
 }
 
-func New(_ context.Context, cfg *Config) Patcher {
-	return &patcher{
+func New(_ context.Context, cfg *Config) Buildkit {
+	return &buildkit{
 		cfg: cfg,
 	}
 }
@@ -34,14 +34,14 @@ func DefaultConfig() *Config {
 	return &Config{}
 }
 
-func (p *patcher) Init(_ context.Context) error {
+func (b *buildkit) Init(_ context.Context) error {
 	return nil
 }
 
-func (p *patcher) Deinit(_ context.Context) error {
+func (b *buildkit) Deinit(_ context.Context) error {
 	return nil
 }
 
-func (p *patcher) Run(_ context.Context) error {
+func (b *buildkit) Run(_ context.Context) error {
 	return nil
 }

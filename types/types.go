@@ -1,4 +1,4 @@
-package differ
+package types
 
 type Differ struct {
 	Image1   string `json:"Image1"`

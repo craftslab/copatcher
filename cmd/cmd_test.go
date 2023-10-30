@@ -12,7 +12,22 @@ func TestInitConfig(t *testing.T) {
 	assert.Equal(t, nil, nil)
 }
 
-func TestInitDiffer(t *testing.T) {
+func TestInitBuildkit(t *testing.T) {
+	_ = context.Background()
+	assert.Equal(t, nil, nil)
+}
+
+func TestInitParse(t *testing.T) {
+	_ = context.Background()
+	assert.Equal(t, nil, nil)
+}
+
+func TestInitPkgmgr(t *testing.T) {
+	_ = context.Background()
+	assert.Equal(t, nil, nil)
+}
+
+func TestInitReport(t *testing.T) {
 	_ = context.Background()
 	assert.Equal(t, nil, nil)
 }
