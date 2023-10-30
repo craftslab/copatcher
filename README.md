@@ -66,15 +66,15 @@ docker run --detach --rm --privileged --name buildkitd \
   --entrypoint buildkitd moby/buildkit:latest
 # OR
 docker run --detach --rm --privileged -p 127.0.0.1:8888:8888/tcp --name buildkitd \
-  --entrypoint buildkitd moby/buildkit:latest --addr tcp://0.0.0.0:8888
+  --entrypoint buildkitd moby/buildkit:latest --address tcp://0.0.0.0:8888
 
 # Run copatcher
 version=latest make build
 ./bin/copatcher --image ubuntu:22.04 --report report.json --tag 22.04-patched --timeout "5m" \
-  --addr "docker-container://buildkitd" --ignore-errors
+  --address "docker-container://buildkitd" --ignore-errors
 # OR
 ./bin/copatcher --image ubuntu:22.04 --report report.json --tag 22.04-patched --timeout "5m" \
-  --addr "tcp://0.0.0.0:8888" --ignore-errors
+  --address "tcp://0.0.0.0:8888" --ignore-errors
 ```
 
 
@@ -99,7 +99,7 @@ Container patcher
 Flags:
   --[no-]help           Show context-sensitive help (also try --help-long and --help-man).
   --[no-]version        Show application version.
-  --addr="unix:///run/buildkit/buildkitd.sock"
+  --address="unix:///run/buildkit/buildkitd.sock"
                         Address of buildkitd service
   --[no-]ignore-errors  Ignore errors and continue patching
   --image=IMAGE         Application image name and tag to patch
