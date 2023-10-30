@@ -62,7 +62,7 @@ version=latest make build
 
 ```bash
 version=latest make docker
-docker run ghcr.io/craftslab/copatcher:latest
+docker run ghcr.io/craftslab/copatcher:latest [options]
 ```
 
 
