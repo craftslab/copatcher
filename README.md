@@ -23,8 +23,12 @@
 ## Install
 
 ```bash
+# container-diff
 curl -LO https://storage.googleapis.com/container-diff/latest/container-diff-linux-amd64
 sudo install container-diff-linux-amd64 /usr/local/bin/container-diff
+
+# buildkit
+docker pull moby/buildkit:latest
 ```
 
 
@@ -32,10 +36,19 @@ sudo install container-diff-linux-amd64 /usr/local/bin/container-diff
 ## Run
 
 ```bash
-container-diff diff --type=apt --type=node --type=pip --json daemon://image1 daemon://image2 > diff.json
+# container-diff
+container-diff diff --type=apt --type=node --type=pip --json daemon://ubuntu:22.04 daemon://ubuntu:23.04 > diff.json
 
+# buildkit
+docker run --detach --rm --privileged --name buildkitd --entrypoint buildkitd moby/buildkit:latest
+# OR
+docker run --detach --rm --privileged -p 127.0.0.1:8888:8888/tcp --name buildkitd --entrypoint buildkitd moby/buildkit:latest --addr tcp://0.0.0.0:8888
+
+# copatcher
 version=latest make build
-./bin/copatcher --container-diff=diff.json --output-file=Dockerfile
+./bin/copatcher --image ubuntu:22.04 --report diff.json --tag 22.04-patched --timeout 5m --addr docker-container://buildkitd --ignore-errors
+# OR
+./bin/copatcher --image ubuntu:22.04 --report diff.json --tag 22.04-patched --timeout 5m --addr tcp://0.0.0.0:8888 --ignore-errors
 ```
 
 
@@ -52,26 +65,7 @@ docker run ghcr.io/craftslab/copatcher:latest
 ## Usage
 
 ```
-usage: copatcher --container-diff=CONTAINER-DIFF --output-file=OUTPUT-FILE [<flags>]
-
-Container patcher
-
-
-Flags:
-  --[no-]help                Show context-sensitive help (also try --help-long and --help-man).
-  --[no-]version             Show application version.
-  --container-diff=CONTAINER-DIFF
-                             Container difference (.json)
-  --output-file=OUTPUT-FILE  Output file (Dockerfile)
-```
-
-
-
-## Example
-
-```bash
-container-diff diff --type=apt --type=node --type=pip --json daemon://ubuntu:22.04 daemon://ubuntu:23.04 > diff.json
-copatcher --container-diff=diff.json --output-file=Dockerfile
+TBD
 ```
 
 
