@@ -37,8 +37,10 @@ docker pull moby/buildkit:latest
 
 ```bash
 # container-diff
+docker commit -m "Create new image from container's changes" \
+  ubuntu-22.04-container ubuntu:22.04-updated
 container-diff diff --type=apt --type=node --type=pip --json \
-  daemon://ubuntu:22.04 daemon://ubuntu:23.04 > report.json
+  daemon://ubuntu:22.04 daemon://ubuntu:22.04-updated > report.json
 
 # buildkit
 docker run --detach --rm --privileged --name buildkitd \
