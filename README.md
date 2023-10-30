@@ -50,10 +50,10 @@ docker run --detach --rm --privileged -p 127.0.0.1:8888:8888/tcp --name buildkit
 # copatcher
 version=latest make build
 ./bin/copatcher --image ubuntu:22.04 --report diff.json --tag 22.04-patched --timeout "5m" \
-  --addr docker-container://buildkitd --ignore-errors
+  --addr "docker-container://buildkitd" --ignore-errors
 # OR
 ./bin/copatcher --image ubuntu:22.04 --report diff.json --tag 22.04-patched --timeout "5m" \
-  --addr tcp://0.0.0.0:8888 --ignore-errors
+  --addr "tcp://0.0.0.0:8888" --ignore-errors
 ```
 
 
