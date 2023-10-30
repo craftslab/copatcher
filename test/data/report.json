@@ -371,22 +371,22 @@
         {
           "Package": "libc-bin",
           "Info1": {
-            "Version": "2.35-0ubuntu3.1",
+            "Version": "2.35-0ubuntu3.4",
             "Size": 2597888
           },
           "Info2": {
-            "Version": "2.37-0ubuntu2",
+            "Version": "2.37-0ubuntu2.1",
             "Size": 2184192
           }
         },
         {
           "Package": "libc6",
           "Info1": {
-            "Version": "2.35-0ubuntu3.1",
+            "Version": "2.35-0ubuntu3.4",
             "Size": 13918208
           },
           "Info2": {
-            "Version": "2.37-0ubuntu2",
+            "Version": "2.37-0ubuntu2.1",
             "Size": 13570048
           }
         },
@@ -767,12 +767,12 @@
         {
           "Package": "libsystemd0",
           "Info1": {
-            "Version": "249.11-0ubuntu3.9",
+            "Version": "249.11-0ubuntu3.10",
             "Size": 1018880
           },
           "Info2": {
-            "Version": "252.5-2ubuntu3",
-            "Size": 967680
+            "Version": "252.5-2ubuntu3.1",
+            "Size": 968704
           }
         },
         {
@@ -800,12 +800,12 @@
         {
           "Package": "libudev1",
           "Info1": {
-            "Version": "249.11-0ubuntu3.9",
+            "Version": "249.11-0ubuntu3.10",
             "Size": 355328
           },
           "Info2": {
-            "Version": "252.5-2ubuntu3",
-            "Size": 285696
+            "Version": "252.5-2ubuntu3.1",
+            "Size": 286720
           }
         },
         {
