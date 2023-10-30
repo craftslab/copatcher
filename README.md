@@ -75,6 +75,12 @@ TBD
 
 
 
+## Design
+
+![design](design.png)
+
+
+
 ## License
 
 Project License can be found [here](LICENSE).
