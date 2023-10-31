@@ -38,11 +38,6 @@ func Run(ctx context.Context) error {
 		return errors.Wrap(err, "failed to init buildkit")
 	}
 
-	pa, err := initParse(ctx, cfg)
-	if err != nil {
-		return errors.Wrap(err, "failed to init parse")
-	}
-
 	pk, err := initPkgmgr(ctx, cfg)
 	if err != nil {
 		return errors.Wrap(err, "failed to init pkgmgr")
@@ -58,7 +53,7 @@ func Run(ctx context.Context) error {
 		return errors.Wrap(err, "failed to init patcher")
 	}
 
-	if err := runPatcher(ctx, bk, pa, pk, rp, pt); err != nil {
+	if err := runPatcher(ctx, bk, pk, rp, pt); err != nil {
 		return errors.Wrap(err, "failed to run patcher")
 	}
 
@@ -76,14 +71,6 @@ func initBuildkit(ctx context.Context, cfg *config.Config) (buildkit.Buildkit, e
 	c.Config = *cfg
 
 	return buildkit.New(ctx, c), nil
-}
-
-func initParse(ctx context.Context, cfg *config.Config) (parse.Parse, error) {
-	c := parse.DefaultConfig()
-
-	c.Config = *cfg
-
-	return parse.New(ctx, c), nil
 }
 
 func initPkgmgr(ctx context.Context, cfg *config.Config) (pkgmgr.Pkgmgr, error) {
@@ -110,7 +97,7 @@ func initPatcher(ctx context.Context, cfg *config.Config) (patcher.Patcher, erro
 	return patcher.New(ctx, c), nil
 }
 
-func runPatcher(ctx context.Context, bk buildkit.Buildkit, pa parse.Parse, pk pkgmgr.Pkgmgr,
+func runPatcher(ctx context.Context, bk buildkit.Buildkit, pk pkgmgr.Pkgmgr,
 	rp report.Report, pt patcher.Patcher) error {
 	if err := pt.Init(ctx); err != nil {
 		return errors.Wrap(err, "failed to init")

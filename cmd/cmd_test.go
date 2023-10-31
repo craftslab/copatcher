@@ -17,11 +17,6 @@ func TestInitBuildkit(t *testing.T) {
 	assert.Equal(t, nil, nil)
 }
 
-func TestInitParse(t *testing.T) {
-	_ = context.Background()
-	assert.Equal(t, nil, nil)
-}
-
 func TestInitPkgmgr(t *testing.T) {
 	_ = context.Background()
 	assert.Equal(t, nil, nil)
