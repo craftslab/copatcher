@@ -6,10 +6,6 @@ import (
 	"github.com/craftslab/copatcher/config"
 )
 
-const (
-	DefaultAddr = "unix:///run/buildkit/buildkitd.sock"
-)
-
 type Buildkit interface {
 	Init(context.Context) error
 	Deinit(context.Context) error
