@@ -17,6 +17,10 @@ import (
 	"google.golang.org/grpc"
 )
 
+const (
+	prefix = "unix://"
+)
+
 type mockControlServer struct {
 	controlapi.ControlServer
 }
@@ -185,7 +189,7 @@ func TestNewClient(t *testing.T) {
 			addr := newMockBuildkitAPI(t)
 			ctxT, cancel := context.WithTimeout(ctx, time.Second)
 			bkOpts := Opts{
-				Addr: "unix://" + addr,
+				Addr: prefix + addr,
 			}
 			client, err := NewClient(ctxT, bkOpts)
 			cancel()
@@ -204,7 +208,7 @@ func TestNewClient(t *testing.T) {
 			ctxT, cancel := context.WithTimeout(ctx, time.Second)
 			defer cancel()
 			bkOpts := Opts{
-				Addr: "unix://" + addr,
+				Addr: prefix + addr,
 			}
 			client, err := NewClient(ctxT, bkOpts)
 			assert.NoError(t, err)
