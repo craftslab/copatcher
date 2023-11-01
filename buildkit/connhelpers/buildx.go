@@ -21,6 +21,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// nolint: gochecknoinits
 func init() {
 	connhelper.Register("buildx", Buildx)
 }
@@ -60,16 +61,16 @@ func buildxContextDialer(builder string) func(context.Context, string) (net.Conn
 
 		base := filepath.Join(filepath.Dir(configPath), "buildx")
 		if builder == "" {
-			dt, err := os.ReadFile(filepath.Join(base, "current"))
-			if err != nil {
-				return nil, err
+			dt, e := os.ReadFile(filepath.Join(base, "current"))
+			if e != nil {
+				return nil, e
 			}
 			type ref struct {
 				Name string `json:"name"`
 			}
 			var r ref
-			if err := json.Unmarshal(dt, &r); err != nil {
-				return nil, fmt.Errorf("could not unmarshal buildx config: %w", err)
+			if e := json.Unmarshal(dt, &r); e != nil {
+				return nil, fmt.Errorf("could not unmarshal buildx config: %w", e)
 			}
 			builder = r.Name
 		}
@@ -78,7 +79,8 @@ func buildxContextDialer(builder string) func(context.Context, string) (net.Conn
 		cmd := exec.CommandContext(ctx, "docker", "buildx", "inspect", "--bootstrap", builder)
 		errBuf := bytes.NewBuffer(nil)
 		cmd.Stderr = errBuf
-		if err := cmd.Run(); err != nil {
+		err = cmd.Run()
+		if err != nil {
 			return nil, fmt.Errorf("could not inspect buildx instance: %w: %s", err, errBuf.String())
 		}
 

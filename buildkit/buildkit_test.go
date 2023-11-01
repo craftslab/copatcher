@@ -17,11 +17,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-func TestBuildkit(t *testing.T) {
-	p := New(context.Background(), DefaultConfig())
-	assert.NotEqual(t, nil, p)
-}
-
 type mockControlServer struct {
 	controlapi.ControlServer
 }
@@ -62,22 +57,22 @@ func (m *mockLLBBridgeServer) Solve(context.Context, *gateway.SolveRequest) (*ga
 
 func makeCapList(capIDs ...apicaps.CapID) []caps.APICap {
 	var (
-		ls   apicaps.CapList
-		caps = make([]apicaps.Cap, 0, len(capIDs))
+		ls apicaps.CapList
+		c  = make([]apicaps.Cap, 0, len(capIDs))
 	)
 
 	for _, id := range capIDs {
-		caps = append(caps, apicaps.Cap{
+		c = append(c, apicaps.Cap{
 			ID:      id,
 			Enabled: true,
 		})
 	}
 
-	ls.Init(caps...)
+	ls.Init(c...)
 	return ls.All()
 }
 
-func newMockBuildkitAPI(t *testing.T, caps ...apicaps.CapID) string {
+func newMockBuildkitAPI(t *testing.T, c ...apicaps.CapID) string {
 	tmp := t.TempDir()
 	l, err := net.Listen("unix", filepath.Join(tmp, "buildkitd.sock"))
 	if err != nil {
@@ -88,7 +83,7 @@ func newMockBuildkitAPI(t *testing.T, caps ...apicaps.CapID) string {
 	srv := grpc.NewServer()
 	t.Cleanup(srv.Stop)
 
-	capList := makeCapList(caps...)
+	capList := makeCapList(c...)
 	gateway.RegisterLLBBridgeServer(srv, &mockLLBBridgeServer{
 		LLBBridgeServer: &gateway.UnimplementedLLBBridgeServer{},
 		caps:            capList,
@@ -132,18 +127,18 @@ func unwrapErrors(err error) []error {
 	return out
 }
 
-func checkMissingCapsError(t *testing.T, err error, caps ...apicaps.CapID) {
+func checkMissingCapsError(t *testing.T, err error, c ...apicaps.CapID) {
 	t.Helper()
 	lsErr := unwrapErrors(err)
-	found := make(map[apicaps.CapID]bool, len(caps))
+	found := make(map[apicaps.CapID]bool, len(c))
 	for _, err := range lsErr {
 		check := &apicaps.CapError{}
 		if errors.As(err, &check) {
 			found[check.ID] = true
 		}
 	}
-	if len(found) != len(caps) {
-		t.Errorf("expected %d errors, got: %d", len(caps), len(found))
+	if len(found) != len(c) {
+		t.Errorf("expected %d errors, got: %d", len(c), len(found))
 		t.Error(lsErr)
 	}
 }

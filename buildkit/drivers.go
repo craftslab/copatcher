@@ -33,11 +33,11 @@ func NewClient(ctx context.Context, bkOpts Opts) (*client.Client, error) {
 		return autoClient(ctx)
 	}
 	opts := getCredentialOptions(bkOpts)
-	client, err := client.New(ctx, bkOpts.Addr, opts...)
+	clt, err := client.New(ctx, bkOpts.Addr, opts...)
 	if err != nil {
 		return nil, err
 	}
-	return client, nil
+	return clt, nil
 }
 
 func getCredentialOptions(bkOpts Opts) []client.ClientOpt {
@@ -120,7 +120,8 @@ func autoClient(ctx context.Context, opts ...client.ClientOpt) (*client.Client, 
 	log.Debug("Trying default buildkit addr")
 	c, err = client.New(ctx, DefaultAddr, opts...)
 	if err == nil {
-		if err := ValidateClient(ctx, c); err == nil {
+		err = ValidateClient(ctx, c)
+		if err == nil {
 			return c, nil
 		}
 		c.Close()

@@ -13,6 +13,7 @@ import (
 	"github.com/moby/buildkit/client/connhelper"
 )
 
+// nolint: gochecknoinits
 func init() {
 	connhelper.Register("docker", Docker)
 }
