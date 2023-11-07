@@ -13,6 +13,7 @@ import (
 
 const testLogPipeMsg = "Test LogPipe message"
 
+// nolint: gocritic
 func TestLogPipe(t *testing.T) {
 	cmd := exec.Command("echo", testLogPipeMsg)
 	stdout, err := cmd.StdoutPipe()
@@ -30,7 +31,7 @@ func TestLogPipe(t *testing.T) {
 		return
 	}
 
-	expected := fmt.Sprintf("level=info msg=\"%q\"", testLogPipeMsg)
+	expected := fmt.Sprintf("level=info msg=\"%s\"", testLogPipeMsg)
 	start := time.Now()
 	for stdOutBuf.Len() < len(expected) {
 		if time.Since(start) > 10*time.Millisecond {
@@ -41,7 +42,7 @@ func TestLogPipe(t *testing.T) {
 		time.Sleep(1 * time.Millisecond)
 	}
 
-	if !strings.Contains(stdOutBuf.String(), fmt.Sprintf("level=info msg=\"%q\"", testLogPipeMsg)) {
+	if !strings.Contains(stdOutBuf.String(), fmt.Sprintf("level=info msg=\"%s\"", testLogPipeMsg)) {
 		t.Errorf("LogPipe() result: \"%s\", want: \"%s\"", stdOutBuf.String(), testLogPipeMsg)
 		return
 	}
