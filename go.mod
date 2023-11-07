@@ -1,6 +1,6 @@
 module github.com/craftslab/copatcher
 
-go 1.18
+go 1.20
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.3.2
