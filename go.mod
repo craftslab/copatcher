@@ -10,6 +10,8 @@ require (
 	github.com/cpuguy83/go-docker v0.2.1
 	github.com/docker/buildx v0.11.2
 	github.com/docker/cli v24.0.7+incompatible
+	github.com/hashicorp/go-multierror v1.1.1
+	github.com/knqyf263/go-deb-version v0.0.0-20230223133812-3ed183d23422
 	github.com/moby/buildkit v0.12.3
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.0-rc3
@@ -57,6 +59,7 @@ require (
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.15 // indirect
 	github.com/in-toto/in-toto-golang v0.5.0 // indirect

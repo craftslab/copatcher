@@ -10,7 +10,6 @@ import (
 	"github.com/craftslab/copatcher/buildkit"
 	"github.com/craftslab/copatcher/config"
 	"github.com/craftslab/copatcher/patcher"
-	"github.com/craftslab/copatcher/pkgmgr"
 	"github.com/craftslab/copatcher/report"
 )
 
@@ -32,11 +31,6 @@ func Run(ctx context.Context) error {
 		return errors.Wrap(err, "failed to init config")
 	}
 
-	pk, err := initPkgmgr(ctx, cfg)
-	if err != nil {
-		return errors.Wrap(err, "failed to init pkgmgr")
-	}
-
 	rp, err := initReport(ctx, cfg)
 	if err != nil {
 		return errors.Wrap(err, "failed to init report")
@@ -47,7 +41,7 @@ func Run(ctx context.Context) error {
 		return errors.Wrap(err, "failed to init patcher")
 	}
 
-	if err := runPatcher(ctx, pk, rp, pt); err != nil {
+	if err := runPatcher(ctx, rp, pt); err != nil {
 		return errors.Wrap(err, "failed to run patcher")
 	}
 
@@ -57,14 +51,6 @@ func Run(ctx context.Context) error {
 func initConfig(_ context.Context) (*config.Config, error) {
 	c := config.New()
 	return c, nil
-}
-
-func initPkgmgr(ctx context.Context, cfg *config.Config) (pkgmgr.Pkgmgr, error) {
-	c := pkgmgr.DefaultConfig()
-
-	c.Config = *cfg
-
-	return pkgmgr.New(ctx, c), nil
 }
 
 func initReport(ctx context.Context, cfg *config.Config) (report.Report, error) {
@@ -83,7 +69,7 @@ func initPatcher(ctx context.Context, cfg *config.Config) (patcher.Patcher, erro
 	return patcher.New(ctx, c), nil
 }
 
-func runPatcher(ctx context.Context, pk pkgmgr.Pkgmgr, rp report.Report, pt patcher.Patcher) error {
+func runPatcher(ctx context.Context, rp report.Report, pt patcher.Patcher) error {
 	if err := pt.Init(ctx); err != nil {
 		return errors.Wrap(err, "failed to init")
 	}
