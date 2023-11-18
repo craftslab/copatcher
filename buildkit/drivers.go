@@ -32,11 +32,14 @@ func NewClient(ctx context.Context, bkOpts Opts) (*client.Client, error) {
 	if bkOpts.Addr == "" {
 		return autoClient(ctx)
 	}
+
 	opts := getCredentialOptions(bkOpts)
+
 	clt, err := client.New(ctx, bkOpts.Addr, opts...)
 	if err != nil {
 		return nil, err
 	}
+
 	return clt, nil
 }
 
@@ -58,6 +61,7 @@ func getServerNameFromAddr(addr string) string {
 	if err != nil {
 		return ""
 	}
+
 	return u.Hostname()
 }
 
@@ -66,14 +70,15 @@ func ValidateClient(ctx context.Context, c *client.Client) error {
 	_, err := c.Build(ctx, client.SolveOpt{}, "", func(ctx context.Context, client gateway.Client) (*gateway.Result, error) {
 		capset := client.BuildOpts().LLBCaps
 		var err error
-		for _, cap := range requiredCaps {
-			err = errors.Join(err, capset.Supports(cap))
+		for _, _cap := range requiredCaps {
+			err = errors.Join(err, capset.Supports(_cap))
 		}
 		if err != nil {
 			return nil, errors.Join(err, errMissingCap)
 		}
 		return &gateway.Result{}, nil
 	}, nil)
+
 	return err
 }
 
@@ -81,13 +86,13 @@ func autoClient(ctx context.Context, opts ...client.ClientOpt) (*client.Client, 
 	var retErr error
 
 	newClient := func(ctx context.Context, dialer func(context.Context, string) (net.Conn, error)) (*client.Client, error) {
-		client, err := client.New(ctx, "", append(opts, client.WithContextDialer(dialer))...)
+		_client, err := client.New(ctx, "", append(opts, client.WithContextDialer(dialer))...)
 		if err == nil {
-			err = ValidateClient(ctx, client)
+			err = ValidateClient(ctx, _client)
 			if err == nil {
-				return client, nil
+				return _client, nil
 			}
-			client.Close()
+			_ = _client.Close()
 		}
 		return nil, err
 	}
@@ -124,8 +129,10 @@ func autoClient(ctx context.Context, opts ...client.ClientOpt) (*client.Client, 
 		if err == nil {
 			return c, nil
 		}
-		c.Close()
+		_ = c.Close()
 	}
+
 	log.WithError(err).Debug("Could not use buildkitd driver")
+
 	return nil, errors.Join(retErr, fmt.Errorf("could not use buildkitd driver: %w", err))
 }

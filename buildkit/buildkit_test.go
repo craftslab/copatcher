@@ -10,6 +10,7 @@ import (
 
 	controlapi "github.com/moby/buildkit/api/services/control"
 	types "github.com/moby/buildkit/api/types"
+	"github.com/moby/buildkit/client"
 	gateway "github.com/moby/buildkit/frontend/gateway/pb"
 	"github.com/moby/buildkit/util/apicaps"
 	caps "github.com/moby/buildkit/util/apicaps/pb"
@@ -73,16 +74,21 @@ func makeCapList(capIDs ...apicaps.CapID) []caps.APICap {
 	}
 
 	ls.Init(c...)
+
 	return ls.All()
 }
 
 func newMockBuildkitAPI(t *testing.T, c ...apicaps.CapID) string {
 	tmp := t.TempDir()
+
 	l, err := net.Listen("unix", filepath.Join(tmp, "buildkitd.sock"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { l.Close() })
+
+	t.Cleanup(func() {
+		_ = l.Close()
+	})
 
 	srv := grpc.NewServer()
 	t.Cleanup(srv.Stop)
@@ -93,11 +99,14 @@ func newMockBuildkitAPI(t *testing.T, c ...apicaps.CapID) string {
 		caps:            capList,
 	})
 
-	go srv.Serve(l) // nolint:errcheck
+	go func() {
+		_ = srv.Serve(l)
+	}()
 
 	control := &mockControlServer{
 		ControlServer: &controlapi.UnimplementedControlServer{},
 	}
+
 	controlapi.RegisterControlServer(srv, control)
 
 	return l.Addr().String()
@@ -116,6 +125,7 @@ func unwrapErrors(err error) []error {
 	}
 
 	var out []error
+
 	switch v := err.(type) {
 	case stdUnwrap:
 		return unwrapErrors(v.Unwrap())
@@ -135,12 +145,14 @@ func checkMissingCapsError(t *testing.T, err error, c ...apicaps.CapID) {
 	t.Helper()
 	lsErr := unwrapErrors(err)
 	found := make(map[apicaps.CapID]bool, len(c))
+
 	for _, err := range lsErr {
 		check := &apicaps.CapError{}
 		if errors.As(err, &check) {
 			found[check.ID] = true
 		}
 	}
+
 	if len(found) != len(c) {
 		t.Errorf("expected %d errors, got: %d", len(c), len(found))
 		t.Error(lsErr)
@@ -191,16 +203,18 @@ func TestNewClient(t *testing.T) {
 			bkOpts := Opts{
 				Addr: prefix + addr,
 			}
-			client, err := NewClient(ctxT, bkOpts)
+			_client, err := NewClient(ctxT, bkOpts)
 			cancel()
 			assert.NoError(t, err)
-			defer client.Close()
-
+			defer func(c *client.Client) {
+				_ = c.Close()
+			}(_client)
 			ctxT, cancel = context.WithTimeout(ctx, time.Second)
-			err = ValidateClient(ctxT, client)
+			err = ValidateClient(ctxT, _client)
 			cancel()
 			checkMissingCapsError(t, err, requiredCaps...)
 		})
+
 		t.Run("with caps", func(t *testing.T) {
 			t.Parallel()
 			addr := newMockBuildkitAPI(t, requiredCaps...)
@@ -210,11 +224,12 @@ func TestNewClient(t *testing.T) {
 			bkOpts := Opts{
 				Addr: prefix + addr,
 			}
-			client, err := NewClient(ctxT, bkOpts)
+			_client, err := NewClient(ctxT, bkOpts)
 			assert.NoError(t, err)
-			defer client.Close()
-
-			err = ValidateClient(ctxT, client)
+			defer func(c *client.Client) {
+				_ = c.Close()
+			}(_client)
+			err = ValidateClient(ctxT, _client)
 			assert.NoError(t, err)
 		})
 	})

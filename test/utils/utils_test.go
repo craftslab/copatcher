@@ -9,9 +9,11 @@ import (
 func TestCreateTempFileWithContent(t *testing.T) {
 	// Create a temporary directory for the test files
 	dir := t.TempDir()
-	defer os.RemoveAll(dir)
 
-	// Test creating a file with a given database type and content
+	defer func(p string) {
+		_ = os.RemoveAll(p)
+	}(dir)
+
 	t.Run("creates_file_with_content", func(t *testing.T) {
 		dbType := "testdb"
 		CreateTempFileWithContent(dir, dbType)
@@ -25,7 +27,6 @@ func TestCreateTempFileWithContent(t *testing.T) {
 		}
 	})
 
-	// Test that the file is created in the correct directory
 	t.Run("creates_file_in_correct_directory", func(t *testing.T) {
 		dbType := "otherdb"
 		CreateTempFileWithContent(dir, dbType)

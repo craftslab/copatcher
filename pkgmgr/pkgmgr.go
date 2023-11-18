@@ -47,6 +47,7 @@ type VersionComparer struct {
 func GetUniqueLatestUpdates(updates types.UpdatePackages, cmp VersionComparer, ignoreErrors bool) (types.UpdatePackages, error) {
 	dict := make(map[string]string)
 	var allErrors *multierror.Error
+
 	for _, u := range updates {
 		if cmp.IsValid(u.FixedVersion) {
 			ver, ok := dict[u.Name]
@@ -62,6 +63,7 @@ func GetUniqueLatestUpdates(updates types.UpdatePackages, cmp VersionComparer, i
 			continue
 		}
 	}
+
 	if allErrors != nil && !ignoreErrors {
 		return nil, allErrors.ErrorOrNil()
 	}
@@ -70,6 +72,7 @@ func GetUniqueLatestUpdates(updates types.UpdatePackages, cmp VersionComparer, i
 	for k, v := range dict {
 		out = append(out, types.UpdatePackage{Name: k, FixedVersion: v})
 	}
+
 	return out, nil
 }
 
@@ -88,6 +91,7 @@ type UpdateMap map[string]*UpdatePackageInfo
 // nolint: lll
 func GetValidatedUpdatesMap(updates types.UpdatePackages, cmp VersionComparer, reader PackageInfoReader, stagingPath string) (UpdateMap, error) {
 	m := make(UpdateMap)
+
 	for _, update := range updates {
 		m[update.Name] = &UpdatePackageInfo{Version: update.FixedVersion}
 	}
@@ -96,12 +100,14 @@ func GetValidatedUpdatesMap(updates types.UpdatePackages, cmp VersionComparer, r
 	if err != nil {
 		return nil, err
 	}
+
 	if len(files) == 0 {
 		log.Warn("No downloaded packages to install")
 		return nil, nil
 	}
 
 	var allErrors *multierror.Error
+
 	for _, file := range files {
 		name, err := reader.GetName(file.Name())
 		if err != nil {
@@ -119,14 +125,12 @@ func GetValidatedUpdatesMap(updates types.UpdatePackages, cmp VersionComparer, r
 			allErrors = multierror.Append(allErrors, e)
 			continue
 		}
-
 		p, ok := m[name]
 		if !ok {
 			log.Warnf("Unexpected: ignoring downloaded update package %s not specified in report", name)
-			os.Remove(filepath.Join(stagingPath, file.Name()))
+			_ = os.Remove(filepath.Join(stagingPath, file.Name()))
 			continue
 		}
-
 		if cmp.LessThan(version, p.Version) {
 			err = fmt.Errorf("downloaded package %s version %s lower than required %s for update", name, version, p.Version)
 			log.Error(err)
@@ -139,5 +143,6 @@ func GetValidatedUpdatesMap(updates types.UpdatePackages, cmp VersionComparer, r
 	if allErrors != nil {
 		return nil, allErrors.ErrorOrNil()
 	}
+
 	return m, nil
 }

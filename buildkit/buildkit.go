@@ -60,6 +60,7 @@ func InitializeBuildkitConfig(ctx context.Context, clt *client.Client, image str
 	if err != nil {
 		return nil, err
 	}
+
 	cfg.ConfigData = configData
 
 	// Load the target image state with the resolved image config in case environment variable settings
@@ -96,6 +97,7 @@ func SolveToLocal(ctx context.Context, c *client.Client, st *llb.State, outPath 
 		Frontend: "",         // i.e. we are passing in the llb.Definition directly
 		Session:  attachable, // used for authprovider, sshagentprovider and secretprovider
 	}
+
 	solveOpt.SourcePolicy, err = build.ReadSourcePolicy()
 	if err != nil {
 		return err
@@ -103,10 +105,12 @@ func SolveToLocal(ctx context.Context, c *client.Client, st *llb.State, outPath 
 
 	ch := make(chan *client.SolveStatus)
 	eg, ctx := errgroup.WithContext(ctx)
+
 	eg.Go(func() error {
 		_, e := c.Solve(ctx, def, solveOpt, ch)
 		return e
 	})
+
 	eg.Go(func() error {
 		var c console.Console
 		cn, e := console.ConsoleFromFile(os.Stderr)
@@ -117,10 +121,13 @@ func SolveToLocal(ctx context.Context, c *client.Client, st *llb.State, outPath 
 		_, e = progressui.DisplaySolveStatus(context.TODO(), c, os.Stdout, ch)
 		return e
 	})
+
 	if err := eg.Wait(); err != nil {
 		return err
 	}
+
 	log.Debugf("Wrote LLB state to %s", outPath)
+
 	return nil
 }
 
@@ -134,6 +141,7 @@ func SolveToDocker(ctx context.Context, c *client.Client, st *llb.State, configD
 	pipeR, pipeW := io.Pipe()
 	dockerConfig := config.LoadDefaultConfigFile(os.Stderr)
 	attachable := []session.Attachable{authprovider.NewDockerAuthProvider(dockerConfig)}
+
 	solveOpt := client.SolveOpt{
 		Exports: []client.ExportEntry{
 			{
@@ -151,6 +159,7 @@ func SolveToDocker(ctx context.Context, c *client.Client, st *llb.State, configD
 		Frontend: "",         // i.e. we are passing in the llb.Definition directly
 		Session:  attachable, // used for authprovider, sshagentprovider and secretprovider
 	}
+
 	solveOpt.SourcePolicy, err = build.ReadSourcePolicy()
 	if err != nil {
 		return err
@@ -158,10 +167,12 @@ func SolveToDocker(ctx context.Context, c *client.Client, st *llb.State, configD
 
 	ch := make(chan *client.SolveStatus)
 	eg, ctx := errgroup.WithContext(ctx)
+
 	eg.Go(func() error {
 		_, e := c.Solve(ctx, def, solveOpt, ch)
 		return e
 	})
+
 	eg.Go(func() error {
 		var c console.Console
 		cn, e := console.ConsoleFromFile(os.Stderr)
@@ -172,12 +183,14 @@ func SolveToDocker(ctx context.Context, c *client.Client, st *llb.State, configD
 		_, e = progressui.DisplaySolveStatus(context.TODO(), c, os.Stdout, ch)
 		return e
 	})
+
 	eg.Go(func() error {
 		if err := dockerLoad(ctx, pipeR); err != nil {
 			return err
 		}
 		return pipeR.Close()
 	})
+
 	return eg.Wait()
 }
 
@@ -189,6 +202,7 @@ func dockerLoad(ctx context.Context, pipeR io.Reader) error {
 	if err != nil {
 		return err
 	}
+
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return err
@@ -221,6 +235,7 @@ func resolveImageConfig(ctx context.Context, ref string, platform *ispec.Platfor
 			}
 			return ac.Username, ac.Password, nil
 		}))
+
 	hosts := docker.ConfigureDefaultRegistries(
 		docker.WithClient(http.DefaultClient),
 		docker.WithPlainHTTP(docker.MatchLocalhost),
@@ -229,6 +244,7 @@ func resolveImageConfig(ctx context.Context, ref string, platform *ispec.Platfor
 
 	headers := http.Header{}
 	headers.Set("User-Agent", version.UserAgent())
+
 	resolver := docker.NewResolver(docker.ResolverOptions{
 		Client:  http.DefaultClient,
 		Headers: headers,
@@ -239,5 +255,6 @@ func resolveImageConfig(ctx context.Context, ref string, platform *ispec.Platfor
 	if err != nil {
 		return "", nil, err
 	}
+
 	return dgst, cfg, nil
 }

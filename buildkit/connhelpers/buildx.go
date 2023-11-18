@@ -41,6 +41,7 @@ func Buildx(u *url.URL) (*connhelper.ConnectionHelper, error) {
 	if u.Path != "" {
 		return nil, fmt.Errorf("buildx driver does not support path elements: %s", u.Path)
 	}
+
 	return &connhelper.ConnectionHelper{
 		ContextDialer: buildxContextDialer(u.Host),
 	}, nil
@@ -115,6 +116,7 @@ func buildxContextDialer(builder string) func(context.Context, string) (net.Conn
 				nodes[i], nodes[j] = nodes[j], nodes[i]
 			})
 		}
+
 		return containerContextDialer(ctx, nodes[0].Endpoint, "buildx_buildkit_"+nodes[0].Name)
 	}
 }
@@ -129,11 +131,13 @@ func containerContextDialer(ctx context.Context, host, name string) (net.Conn, e
 	c := cli.ContainerService().NewContainer(ctx, name)
 
 	conn1, conn2 := net.Pipe()
+
 	ep, err := c.Exec(ctx, container.WithExecCmd("buildctl", "dial-stdio"), func(cfg *container.ExecConfig) {
 		cfg.Stdin = conn1
 		cfg.Stdout = conn1
 		cfg.Stderr = conn1
 	})
+
 	if err != nil {
 		if errdefs.IsNotFound(err) {
 			return nil, fmt.Errorf("could not find container %s: %w", name, err)
@@ -141,7 +145,6 @@ func containerContextDialer(ctx context.Context, host, name string) (net.Conn, e
 		if err2 := c.Start(ctx); err2 != nil {
 			return nil, err
 		}
-
 		ep, err = c.Exec(ctx, container.WithExecCmd("buildctl", "dial-stdio"), func(cfg *container.ExecConfig) {
 			cfg.Stdin = conn1
 			cfg.Stdout = conn1

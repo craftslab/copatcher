@@ -56,6 +56,7 @@ func (st dpkgStatusType) String() string {
 	case DPKGStatusMixed:
 		return "DPKGStatusMixed"
 	}
+
 	return "Undefined dpkgStatusType"
 }
 
@@ -69,6 +70,7 @@ func isValidDebianVersion(v string) bool {
 func isLessThanDebianVersion(v1, v2 string) bool {
 	debV1, _ := debVer.NewVersion(v1)
 	debV2, _ := debVer.NewVersion(v2)
+
 	return debV1.LessThan(debV2)
 }
 
@@ -81,14 +83,17 @@ func getAPTImageName(manifest *types.UpdateManifest) string {
 
 	// TODO: support qualifying image name with designated repository
 	log.Debugf("Using %s:%s as basis for tooling image", manifest.Metadata.OS.Type, version)
+
 	return fmt.Sprintf("%s:%s", manifest.Metadata.OS.Type, version)
 }
 
 func getDPKGStatusType(dir string) dpkgStatusType {
 	out := DPKGStatusNone
+
 	if utils.IsNonEmptyFile(dir, "status") {
 		out = DPKGStatusFile
 	}
+
 	if utils.IsNonEmptyFile(dir, "status.d") {
 		if out == DPKGStatusFile {
 			out = DPKGStatusMixed
@@ -96,6 +101,7 @@ func getDPKGStatusType(dir string) dpkgStatusType {
 			out = DPKGStatusDirectory
 		}
 	}
+
 	return out
 }
 
@@ -103,10 +109,12 @@ func getDPKGStatusType(dir string) dpkgStatusType {
 func (dm *dpkgManager) InstallUpdates(ctx context.Context, manifest *types.UpdateManifest, ignoreErrors bool) (*llb.State, []string, error) {
 	// Validate and extract unique updates listed in input manifest
 	debComparer := VersionComparer{isValidDebianVersion, isLessThanDebianVersion}
+
 	updates, err := GetUniqueLatestUpdates(manifest.Updates, debComparer, ignoreErrors)
 	if err != nil {
 		return nil, nil, err
 	}
+
 	if len(updates) == 0 {
 		log.Warn("No update packages were specified to apply")
 		return &dm.config.ImageState, nil, nil
@@ -133,6 +141,7 @@ func (dm *dpkgManager) InstallUpdates(ctx context.Context, manifest *types.Updat
 
 	// Validate that the deployed packages are of the requested version or better
 	resultManifestPath := filepath.Join(dm.workingFolder, resultsPath, resultManifest)
+
 	errPkgs, err := validateDebianPackageVersions(updates, debComparer, resultManifestPath, ignoreErrors)
 	if err != nil {
 		return nil, nil, err
@@ -150,6 +159,7 @@ func (dm *dpkgManager) probeDPKGStatus(ctx context.Context, toolImage string) er
 		llb.Platform(dm.config.Platform),
 		llb.ResolveModeDefault,
 	)
+
 	updated := toolingBase.Run(
 		llb.Shlex("apt update"),
 		llb.WithProxy(utils.GetProxy()),
@@ -171,6 +181,7 @@ func (dm *dpkgManager) probeDPKGStatus(ctx context.Context, toolImage string) er
 
 	// Check Status File
 	outStatePath := filepath.Join(dm.workingFolder, resultsPath)
+
 	dpkgStatus := getDPKGStatusType(outStatePath)
 	switch dpkgStatus {
 	case DPKGStatusFile:
@@ -216,9 +227,11 @@ func (dm *dpkgManager) installUpdates(ctx context.Context, updates types.UpdateP
 	// Note that this keeps the log files from the operation, which we can consider removing as a size optimization in the future.
 	const aptInstallTemplate = `sh -c "apt install --no-install-recommends --allow-change-held-packages -y %s && apt clean -y"`
 	pkgStrings := []string{}
+
 	for _, u := range updates {
 		pkgStrings = append(pkgStrings, u.Name)
 	}
+
 	installCmd := fmt.Sprintf(aptInstallTemplate, strings.Join(pkgStrings, " "))
 	aptInstalled := aptUpdated.Run(llb.Shlex(installCmd), llb.WithProxy(utils.GetProxy())).Root()
 
@@ -235,6 +248,7 @@ func (dm *dpkgManager) installUpdates(ctx context.Context, updates types.UpdateP
 	// Diff the installed updates and merge that into the target image
 	patchDiff := llb.Diff(aptUpdated, aptInstalled)
 	patchMerge := llb.Merge([]llb.State{dm.config.ImageState, patchDiff})
+
 	return &patchMerge, nil
 }
 
@@ -259,9 +273,11 @@ func (dm *dpkgManager) unpackAndMergeUpdates(ctx context.Context, updates types.
 	//  - Reports not specifying version epochs correct (e.g. bsdutils=2.36.1-8+deb11u1 instead of with epoch as 1:2.36.1-8+dev11u1)
 	const aptDownloadTemplate = "apt download --no-install-recommends %s"
 	pkgStrings := []string{}
+
 	for _, u := range updates {
 		pkgStrings = append(pkgStrings, u.Name)
 	}
+
 	downloadCmd := fmt.Sprintf(aptDownloadTemplate, strings.Join(pkgStrings, " "))
 	downloaded := updated.Dir(downloadPath).Run(llb.Shlex(downloadCmd), llb.WithProxy(utils.GetProxy())).Root()
 
@@ -318,6 +334,7 @@ func (dm *dpkgManager) unpackAndMergeUpdates(ctx context.Context, updates types.
 	// Diff unpacked packages layers from previous and merge with target
 	statusDiff := llb.Diff(fieldsWritten, statusUpdated)
 	merged := llb.Merge([]llb.State{dm.config.ImageState, unpackedToRoot, statusDiff})
+
 	return &merged, nil
 }
 
@@ -332,7 +349,10 @@ func dpkgParseResultsManifest(path string) (map[string]string, error) {
 		log.Errorf("%s could not be opened", path)
 		return nil, err
 	}
-	defer f.Close()
+
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 
 	// results.manifest file is expected to be subset of DPKG status or debian info format
 	// consisting of repeating consecutive blocks of:
@@ -343,6 +363,7 @@ func dpkgParseResultsManifest(path string) (map[string]string, error) {
 	updateMap := map[string]string{}
 	fs := bufio.NewScanner(f)
 	var packageName string
+
 	for fs.Scan() {
 		kv := strings.Split(fs.Text(), " ")
 		if len(kv) != kvLen {
@@ -365,6 +386,7 @@ func dpkgParseResultsManifest(path string) (map[string]string, error) {
 			return nil, err
 		}
 	}
+
 	if packageName != "" {
 		log.Debugf("ignoring held or not-installed Package without Version: %s", packageName)
 	}
@@ -383,6 +405,7 @@ func validateDebianPackageVersions(updates types.UpdatePackages, cmp VersionComp
 	// for each target package, validate version is mapped version is >= requested version
 	var allErrors *multierror.Error
 	errorPkgs := []string{}
+
 	for _, update := range updates {
 		version, ok := updateMap[update.Name]
 		if !ok {

@@ -35,8 +35,10 @@ func getDockerTransport(addr string) (transport.Doer, error) {
 	if addr == "" {
 		addr = os.Getenv("DOCKER_HOST")
 	}
+
 	if addr == "" {
 		return transport.DefaultTransport()
 	}
+
 	return transport.FromConnectionString(addr)
 }

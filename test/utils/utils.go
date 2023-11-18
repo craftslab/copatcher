@@ -8,6 +8,7 @@ import (
 
 func CreateTempFileWithContent(dir, dbType string) {
 	path := filepath.Join(dir, dbType)
+
 	file, err := os.Create(path)
 	if err != nil {
 		log.Fatal(err)

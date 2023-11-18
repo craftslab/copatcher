@@ -46,6 +46,7 @@ func TestDPKGStatusTypeString(t *testing.T) {
 			want: "Undefined dpkgStatusType",
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.st.String(); got != tt.want {
@@ -59,6 +60,7 @@ func TestIsValidDebianVersion(t *testing.T) {
 	type args struct {
 		v string
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -68,6 +70,7 @@ func TestIsValidDebianVersion(t *testing.T) {
 		{"invalid version", args{"a.b"}, false},
 		{"valid version with suffix", args{"1.0-r0"}, true},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := isValidDebianVersion(tt.args.v); got != tt.want {
@@ -137,19 +140,28 @@ func TestGetAPTImageName(t *testing.T) {
 func TestGetDPKGStatusType(t *testing.T) {
 	// Create some temporary directories with different files
 	dir1 := t.TempDir() // empty directory
+	defer func(name string) {
+		_ = os.Remove(name)
+	}(dir1)
 
 	dir2 := t.TempDir() // directory with status files
 	testutils.CreateTempFileWithContent(dir2, "status")
-	defer os.Remove(dir2)
+	defer func(name string) {
+		_ = os.Remove(name)
+	}(dir2)
 
 	dir3 := t.TempDir() // directory with status.d directory
 	testutils.CreateTempFileWithContent(dir3, "status.d")
-	defer os.Remove(dir2)
+	defer func(name string) {
+		_ = os.Remove(name)
+	}(dir3)
 
 	dir4 := t.TempDir() // directory with status file and status.d directory
 	testutils.CreateTempFileWithContent(dir4, "status")
 	testutils.CreateTempFileWithContent(dir4, "status.d")
-	defer os.Remove(dir4)
+	defer func(name string) {
+		_ = os.Remove(name)
+	}(dir4)
 
 	tests := []struct {
 		name        string
@@ -354,6 +366,7 @@ func Test_dpkgManager_GetPackageType(t *testing.T) {
 		isDistroless  bool
 		statusdNames  string
 	}
+
 	tests := []struct {
 		name   string
 		fields fields
@@ -370,6 +383,7 @@ func Test_dpkgManager_GetPackageType(t *testing.T) {
 			want: "deb",
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dm := &dpkgManager{
