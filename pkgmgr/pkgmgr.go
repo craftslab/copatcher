@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/craftslab/copatcher/buildkit"
-	"github.com/craftslab/copatcher/types/unversioned"
+	"github.com/craftslab/copatcher/types"
 )
 
 const (
@@ -23,7 +23,7 @@ const (
 )
 
 type PackageManager interface {
-	InstallUpdates(context.Context, *unversioned.UpdateManifest, bool) (*llb.State, []string, error)
+	InstallUpdates(context.Context, *types.UpdateManifest, bool) (*llb.State, []string, error)
 	GetPackageType() string
 }
 
@@ -44,7 +44,7 @@ type VersionComparer struct {
 }
 
 // nolint: lll
-func GetUniqueLatestUpdates(updates unversioned.UpdatePackages, cmp VersionComparer, ignoreErrors bool) (unversioned.UpdatePackages, error) {
+func GetUniqueLatestUpdates(updates types.UpdatePackages, cmp VersionComparer, ignoreErrors bool) (types.UpdatePackages, error) {
 	dict := make(map[string]string)
 	var allErrors *multierror.Error
 	for _, u := range updates {
@@ -66,9 +66,9 @@ func GetUniqueLatestUpdates(updates unversioned.UpdatePackages, cmp VersionCompa
 		return nil, allErrors.ErrorOrNil()
 	}
 
-	out := unversioned.UpdatePackages{}
+	out := types.UpdatePackages{}
 	for k, v := range dict {
-		out = append(out, unversioned.UpdatePackage{Name: k, FixedVersion: v})
+		out = append(out, types.UpdatePackage{Name: k, FixedVersion: v})
 	}
 	return out, nil
 }
@@ -86,7 +86,7 @@ type PackageInfoReader interface {
 type UpdateMap map[string]*UpdatePackageInfo
 
 // nolint: lll
-func GetValidatedUpdatesMap(updates unversioned.UpdatePackages, cmp VersionComparer, reader PackageInfoReader, stagingPath string) (UpdateMap, error) {
+func GetValidatedUpdatesMap(updates types.UpdatePackages, cmp VersionComparer, reader PackageInfoReader, stagingPath string) (UpdateMap, error) {
 	m := make(UpdateMap)
 	for _, update := range updates {
 		m[update.Name] = &UpdatePackageInfo{Version: update.FixedVersion}

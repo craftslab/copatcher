@@ -25,7 +25,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/craftslab/copatcher/types/unversioned"
+	"github.com/craftslab/copatcher/types"
 	"github.com/craftslab/copatcher/utils"
 )
 
@@ -45,7 +45,7 @@ type Opts struct {
 }
 
 // nolint: lll
-func InitializeBuildkitConfig(ctx context.Context, clt *client.Client, image string, manifest *unversioned.UpdateManifest) (*Config, error) {
+func InitializeBuildkitConfig(ctx context.Context, clt *client.Client, image string, manifest *types.UpdateManifest) (*Config, error) {
 	// Initialize buildkit config for the target image
 	cfg := Config{
 		ImageName: image,

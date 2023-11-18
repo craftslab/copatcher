@@ -1,4 +1,4 @@
-package unversioned
+package types
 
 type UpdateManifest struct {
 	Metadata Metadata       `json:"metadata"`

@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/craftslab/copatcher/buildkit"
-	utils "github.com/craftslab/copatcher/test/utils"
-	"github.com/craftslab/copatcher/types/unversioned"
+	"github.com/craftslab/copatcher/test/utils"
+	"github.com/craftslab/copatcher/types"
 )
 
 // TestGetPackageManager tests the GetPackageManager function.
@@ -82,14 +82,14 @@ func TestGetAPTImageName(t *testing.T) {
 	// Define test cases with input and expected output
 	testCases := []struct {
 		name     string
-		manifest *unversioned.UpdateManifest
+		manifest *types.UpdateManifest
 		want     string
 	}{
 		{
 			name: "ubuntu 20.04",
-			manifest: &unversioned.UpdateManifest{
-				Metadata: unversioned.Metadata{
-					OS: unversioned.OS{
+			manifest: &types.UpdateManifest{
+				Metadata: types.Metadata{
+					OS: types.OS{
 						Type:    "ubuntu",
 						Version: "20.04",
 					},
@@ -99,9 +99,9 @@ func TestGetAPTImageName(t *testing.T) {
 		},
 		{
 			name: "debian 11.0",
-			manifest: &unversioned.UpdateManifest{
-				Metadata: unversioned.Metadata{
-					OS: unversioned.OS{
+			manifest: &types.UpdateManifest{
+				Metadata: types.Metadata{
+					OS: types.OS{
 						Type:    debianOS,
 						Version: "11.0",
 					},
@@ -111,9 +111,9 @@ func TestGetAPTImageName(t *testing.T) {
 		},
 		{
 			name: "debian 11.1",
-			manifest: &unversioned.UpdateManifest{
-				Metadata: unversioned.Metadata{
-					OS: unversioned.OS{
+			manifest: &types.UpdateManifest{
+				Metadata: types.Metadata{
+					OS: types.OS{
 						Type:    debianOS,
 						Version: "11.1",
 					},
@@ -139,16 +139,16 @@ func TestGetDPKGStatusType(t *testing.T) {
 	dir1 := t.TempDir() // empty directory
 
 	dir2 := t.TempDir() // directory with status files
-	utils.CreateTempFileWithContent(dir2, "status")
+	testutils.CreateTempFileWithContent(dir2, "status")
 	defer os.Remove(dir2)
 
 	dir3 := t.TempDir() // directory with status.d directory
-	utils.CreateTempFileWithContent(dir3, "status.d")
+	testutils.CreateTempFileWithContent(dir3, "status.d")
 	defer os.Remove(dir2)
 
 	dir4 := t.TempDir() // directory with status file and status.d directory
-	utils.CreateTempFileWithContent(dir4, "status")
-	utils.CreateTempFileWithContent(dir4, "status.d")
+	testutils.CreateTempFileWithContent(dir4, "status")
+	testutils.CreateTempFileWithContent(dir4, "status.d")
 	defer os.Remove(dir4)
 
 	tests := []struct {
@@ -242,7 +242,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 
 	testCases := []struct {
 		name            string
-		updates         unversioned.UpdatePackages
+		updates         types.UpdatePackages
 		cmp             VersionComparer
 		resultsPath     string
 		ignoreErrors    bool
@@ -251,14 +251,14 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 	}{
 		{
 			name:         "no updates",
-			updates:      unversioned.UpdatePackages{},
+			updates:      types.UpdatePackages{},
 			cmp:          dpkgComparer,
 			resultsPath:  "testdata/dpkg_valid.txt",
 			ignoreErrors: false,
 		},
 		{
 			name: "package not installed",
-			updates: unversioned.UpdatePackages{
+			updates: types.UpdatePackages{
 				{Name: "not-installed", FixedVersion: "1.0.0"},
 			},
 			cmp:          dpkgComparer,
@@ -267,7 +267,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 		},
 		{
 			name: "invalid version",
-			updates: unversioned.UpdatePackages{
+			updates: types.UpdatePackages{
 				{Name: "base-files", FixedVersion: "1.0.0"},
 			},
 			cmp:           dpkgComparer,
@@ -277,7 +277,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 		},
 		{
 			name: "invalid version with ignore errors",
-			updates: unversioned.UpdatePackages{
+			updates: types.UpdatePackages{
 				{Name: "base-files", FixedVersion: "1.0.0"},
 			},
 			cmp:          dpkgComparer,
@@ -286,7 +286,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 		},
 		{
 			name: "version lower than requested",
-			updates: unversioned.UpdatePackages{
+			updates: types.UpdatePackages{
 				{Name: "apt", FixedVersion: "2.0"},
 			},
 			cmp:          dpkgComparer,
@@ -298,7 +298,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 		},
 		{
 			name: "version lower than requested with ignore errors",
-			updates: unversioned.UpdatePackages{
+			updates: types.UpdatePackages{
 				{Name: "apt", FixedVersion: "2.0"},
 			},
 			cmp:          dpkgComparer,
@@ -307,7 +307,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 		},
 		{
 			name: "version equal to requested",
-			updates: unversioned.UpdatePackages{
+			updates: types.UpdatePackages{
 				{Name: "apt", FixedVersion: "1.8.2.3"},
 			},
 			cmp:          dpkgComparer,
@@ -316,7 +316,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 		},
 		{
 			name: "version greater than requested",
-			updates: unversioned.UpdatePackages{
+			updates: types.UpdatePackages{
 				{Name: "apt", FixedVersion: "0.9"},
 			},
 			cmp:          dpkgComparer,
