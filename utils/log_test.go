@@ -11,11 +11,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const testLogPipeMsg = "Test LogPipe message"
+const message = "Test LogPipe message"
 
 // nolint: gocritic
 func TestLogPipe(t *testing.T) {
-	cmd := exec.Command("echo", testLogPipeMsg)
+	cmd := exec.Command("echo", message)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		t.Fatalf("Failed to get stdout pipe: %s", err)
@@ -31,7 +31,7 @@ func TestLogPipe(t *testing.T) {
 		return
 	}
 
-	expected := fmt.Sprintf("level=info msg=\"%s\"", testLogPipeMsg)
+	expected := fmt.Sprintf("level=info msg=\"%s\"", message)
 	start := time.Now()
 	for stdOutBuf.Len() < len(expected) {
 		if time.Since(start) > 10*time.Millisecond {
@@ -42,8 +42,8 @@ func TestLogPipe(t *testing.T) {
 		time.Sleep(1 * time.Millisecond)
 	}
 
-	if !strings.Contains(stdOutBuf.String(), fmt.Sprintf("level=info msg=\"%s\"", testLogPipeMsg)) {
-		t.Errorf("LogPipe() result: \"%s\", want: \"%s\"", stdOutBuf.String(), testLogPipeMsg)
+	if !strings.Contains(stdOutBuf.String(), fmt.Sprintf("level=info msg=\"%s\"", message)) {
+		t.Errorf("LogPipe() result: \"%s\", want: \"%s\"", stdOutBuf.String(), message)
 		return
 	}
 }

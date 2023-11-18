@@ -21,53 +21,57 @@ const (
 	testPerms = 0o711
 )
 
-// Global for the test root directory used by all tests.
 var testRootDir string
 
 func TestMain(m *testing.M) {
-	// Create the root temp test directory.
 	var err error
+
 	testRootDir, err = os.MkdirTemp("", "utils_test_*")
 	if err != nil {
 		log.Println("Failed to create test temp folder")
 		return
 	}
-	defer os.RemoveAll(testRootDir)
 
-	// Create a test directory with different permissions.
+	defer func(p string) {
+		_ = os.RemoveAll(p)
+	}(testRootDir)
+
 	testDir := path.Join(testRootDir, diffPermsDir)
+
 	err = os.MkdirAll(testDir, 0o744)
 	if err != nil {
 		log.Printf("Failed to create test folder: %s\n", err)
 		return
 	}
 
-	// Create an existing test directory.
 	testDir = path.Join(testRootDir, existingDir)
+
 	err = os.MkdirAll(testDir, testPerms)
 	if err != nil {
 		log.Printf("Failed to create test folder %s\n", testDir)
 		return
 	}
 
-	// Create an empty test file.
 	testFile := path.Join(testRootDir, emptyFile)
+
 	f, err := os.Create(testFile)
 	if err != nil {
 		log.Printf("Failed to create test file %s\n", testFile)
 		return
 	}
-	f.Close()
 
-	// Create a non-empty test file.
+	_ = f.Close()
+
 	testFile = path.Join(testRootDir, nonemptyFile)
+
 	f, err = os.Create(testFile)
 	if err != nil {
 		log.Printf("Failed to create test file %s\n", testFile)
 		return
 	}
+
 	_, err = f.WriteString("This is a non-empty test file")
-	f.Close()
+	_ = f.Close()
 	if err != nil {
 		log.Printf("Failed to write to test file: %s\n", err)
 		return
@@ -81,6 +85,7 @@ func TestEnsurePath(t *testing.T) {
 		path string
 		perm os.FileMode
 	}
+
 	tests := []struct {
 		name    string
 		args    args
@@ -94,6 +99,7 @@ func TestEnsurePath(t *testing.T) {
 		{"EmptyPath", args{"", testPerms}, false, true},
 		{"EmptyPerms", args{existingDir, 0o000}, false, true},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testPath := path.Join(testRootDir, tt.args.path)
@@ -107,8 +113,8 @@ func TestEnsurePath(t *testing.T) {
 			}
 		})
 	}
-	// Clean up new path in case go test is run for -count > 1
-	os.Remove(path.Join(testRootDir, newDir))
+
+	_ = os.Remove(path.Join(testRootDir, newDir))
 }
 
 func TestIsNonEmptyFile(t *testing.T) {
@@ -116,6 +122,7 @@ func TestIsNonEmptyFile(t *testing.T) {
 		dir  string
 		file string
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -142,32 +149,36 @@ func TestGetProxy(t *testing.T) {
 	var got llb.ProxyEnv
 	var want llb.ProxyEnv
 
-	// Test with configured proxy
-	os.Setenv("HTTP_PROXY", "httpproxy")
-	os.Setenv("HTTPS_PROXY", "httpsproxy")
-	os.Setenv("NO_PROXY", "noproxy")
+	_ = os.Setenv("HTTP_PROXY", "httpproxy")
+	_ = os.Setenv("HTTPS_PROXY", "httpsproxy")
+	_ = os.Setenv("NO_PROXY", "noproxy")
+
 	got = GetProxy()
+
 	want = llb.ProxyEnv{
 		HTTPProxy:  "httpproxy",
 		HTTPSProxy: "httpsproxy",
 		NoProxy:    "noproxy",
 		AllProxy:   "httpproxy",
 	}
+
 	if got != want {
 		t.Errorf("unexpected proxy config, got %#v want %#v", got, want)
 	}
 
-	// Test with unconfigured proxy
-	os.Unsetenv("HTTP_PROXY")
-	os.Unsetenv("HTTPS_PROXY")
-	os.Unsetenv("NO_PROXY")
+	_ = os.Unsetenv("HTTP_PROXY")
+	_ = os.Unsetenv("HTTPS_PROXY")
+	_ = os.Unsetenv("NO_PROXY")
+
 	got = GetProxy()
+
 	want = llb.ProxyEnv{
 		HTTPProxy:  "",
 		HTTPSProxy: "",
 		NoProxy:    "",
 		AllProxy:   "",
 	}
+
 	if got != want {
 		t.Errorf("unexpected proxy config, got %#v want %#v", got, want)
 	}

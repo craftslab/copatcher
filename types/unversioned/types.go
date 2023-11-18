@@ -7,6 +7,12 @@ type UpdateManifest struct {
 
 type UpdatePackages []UpdatePackage
 
+type UpdatePackage struct {
+	Name             string `json:"name"`
+	InstalledVersion string `json:"installedVersion"`
+	FixedVersion     string `json:"fixedVersion"`
+}
+
 type Metadata struct {
 	OS     OS     `json:"os"`
 	Config Config `json:"config"`
@@ -19,11 +25,4 @@ type OS struct {
 
 type Config struct {
 	Arch string `json:"arch"`
-}
-
-type UpdatePackage struct {
-	Name             string `json:"name"`
-	InstalledVersion string `json:"installedVersion"`
-	FixedVersion     string `json:"fixedVersion"`
-	VulnerabilityID  string `json:"vulnerabilityID"`
 }
