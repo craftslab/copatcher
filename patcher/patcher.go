@@ -22,7 +22,10 @@ import (
 const (
 	DefaultTimeout    = "5m"
 	DefaultPatchedTag = "patched"
-	FolderPerm        = 0o744
+)
+
+const (
+	FolderPerm = 0o744
 )
 
 type Patcher interface {
@@ -62,13 +65,13 @@ func (p *patcher) Run(_ context.Context) error {
 }
 
 func Patch(ctx context.Context, timeout time.Duration, image, patchedTag, workingFolder string,
-	ignoreError bool, bkOpts buildkit.Opts) error {
+	manifest *types.UpdateManifest, ignoreError bool, bkOpts buildkit.Opts) error {
 	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	ch := make(chan error)
 	go func() {
-		ch <- patchWithContext(timeoutCtx, image, patchedTag, workingFolder, ignoreError, bkOpts)
+		ch <- patchWithContext(timeoutCtx, image, patchedTag, workingFolder, manifest, ignoreError, bkOpts)
 	}()
 
 	select {
@@ -83,7 +86,8 @@ func Patch(ctx context.Context, timeout time.Duration, image, patchedTag, workin
 }
 
 // nolint: funlen,gocyclo
-func patchWithContext(ctx context.Context, image, patchedTag, workingFolder string, ignoreError bool, bkOpts buildkit.Opts) error {
+func patchWithContext(ctx context.Context, image, patchedTag, workingFolder string, manifest *types.UpdateManifest,
+	ignoreError bool, bkOpts buildkit.Opts) error {
 	imageName, err := reference.ParseNamed(image)
 	if err != nil {
 		return err
@@ -119,7 +123,9 @@ func patchWithContext(ctx context.Context, image, patchedTag, workingFolder stri
 		if err != nil {
 			return err
 		}
-		defer removeIfNotDebug(workingFolder)
+		defer func(p string) {
+			_ = os.RemoveAll(p)
+		}(workingFolder)
 		if e := os.Chmod(workingFolder, FolderPerm); e != nil {
 			return e
 		}
@@ -128,13 +134,11 @@ func patchWithContext(ctx context.Context, image, patchedTag, workingFolder stri
 			log.Errorf("failed to create workingFolder %s", workingFolder)
 			return e
 		} else if isNew {
-			defer removeIfNotDebug(workingFolder)
+			defer func(p string) {
+				_ = os.RemoveAll(p)
+			}(workingFolder)
 		}
 	}
-
-	// TODO: updates
-	updates := new(types.UpdateManifest)
-	log.Debugf("updates to apply: %v", updates)
 
 	_client, err := buildkit.NewClient(ctx, bkOpts)
 	if err != nil {
@@ -146,20 +150,20 @@ func patchWithContext(ctx context.Context, image, patchedTag, workingFolder stri
 	}(_client)
 
 	// Configure buildctl/client for use by package manager
-	_config, err := buildkit.InitializeBuildkitConfig(ctx, _client, image, updates)
+	_config, err := buildkit.InitializeBuildkitConfig(ctx, _client, image, manifest)
 	if err != nil {
 		return err
 	}
 
 	// Create package manager helper
-	_pkgmgr, err := pkgmgr.GetPackageManager(updates.Metadata.OS.Type, _config, workingFolder)
+	_pkgmgr, err := pkgmgr.GetPackageManager(manifest.Metadata.OS.Type, _config, workingFolder)
 	if err != nil {
 		return err
 	}
 
 	// Export the patched image state to Docker
 	// TODO: Add support for other output modes as buildctl does.
-	patchedImageState, errPkgs, err := _pkgmgr.InstallUpdates(ctx, updates, ignoreError)
+	patchedImageState, errPkgs, err := _pkgmgr.InstallUpdates(ctx, manifest, ignoreError)
 	if err != nil {
 		return err
 	}
@@ -172,29 +176,21 @@ func patchWithContext(ctx context.Context, image, patchedTag, workingFolder stri
 	validatedManifest := &types.UpdateManifest{
 		Metadata: types.Metadata{
 			OS: types.OS{
-				Type:    updates.Metadata.OS.Type,
-				Version: updates.Metadata.OS.Version,
+				Type:    manifest.Metadata.OS.Type,
+				Version: manifest.Metadata.OS.Version,
 			},
 			Config: types.Config{
-				Arch: updates.Metadata.Config.Arch,
+				Arch: manifest.Metadata.Config.Arch,
 			},
 		},
 		Updates: []types.UpdatePackage{},
 	}
 
-	for _, update := range updates.Updates {
+	for _, update := range manifest.Updates {
 		if !slices.Contains(errPkgs, update.Name) {
 			validatedManifest.Updates = append(validatedManifest.Updates, update)
 		}
 	}
 
 	return nil
-}
-
-func removeIfNotDebug(workingFolder string) {
-	if log.GetLevel() >= log.DebugLevel {
-		log.Warnf("--debug specified, working folder at %s needs to be manually cleaned up", workingFolder)
-	} else {
-		_ = os.RemoveAll(workingFolder)
-	}
 }
