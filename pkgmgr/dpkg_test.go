@@ -208,10 +208,10 @@ func TestGetDPKGStatusType(t *testing.T) {
 }
 
 func TestDpkgParseResultsManifest(t *testing.T) {
-	manifestPath := "testdata/dpkg_valid.txt"
-	nonExistingManifestPath := "testdata/non_existing_manifest"
-	emptyManifestPath := "testdata/empty.txt"
-	invalidManifestPath := "testdata/invalid.txt"
+	manifestPath := "../test/data/dpkg_valid.txt"
+	nonExistingManifestPath := "../test/data/non_existing_manifest"
+	emptyManifestPath := "../test/data/empty.txt"
+	invalidManifestPath := "../test/data/invalid.txt"
 
 	t.Run("valid manifest", func(t *testing.T) {
 		expectedMap := map[string]string{
@@ -272,7 +272,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 			name:         "no updates",
 			updates:      types.UpdatePackages{},
 			cmp:          dpkgComparer,
-			resultsPath:  "testdata/dpkg_valid.txt",
+			resultsPath:  "../test/data/dpkg_valid.txt",
 			ignoreErrors: false,
 		},
 		{
@@ -281,7 +281,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 				{Name: "not-installed", FixedVersion: "1.0.0"},
 			},
 			cmp:          dpkgComparer,
-			resultsPath:  "testdata/dpkg_valid.txt",
+			resultsPath:  "../test/data/dpkg_valid.txt",
 			ignoreErrors: false,
 		},
 		{
@@ -290,7 +290,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 				{Name: "base-files", FixedVersion: "1.0.0"},
 			},
 			cmp:           dpkgComparer,
-			resultsPath:   "testdata/dpkg_invalid.txt",
+			resultsPath:   "../test/data/dpkg_invalid.txt",
 			ignoreErrors:  false,
 			expectedError: `invalid version`,
 		},
@@ -300,7 +300,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 				{Name: "base-files", FixedVersion: "1.0.0"},
 			},
 			cmp:          dpkgComparer,
-			resultsPath:  "testdata/dpkg_valid.txt",
+			resultsPath:  "../test/data/dpkg_valid.txt",
 			ignoreErrors: true,
 		},
 		{
@@ -309,7 +309,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 				{Name: "apt", FixedVersion: "2.0"},
 			},
 			cmp:          dpkgComparer,
-			resultsPath:  "testdata/dpkg_valid.txt",
+			resultsPath:  "../test/data/dpkg_valid.txt",
 			ignoreErrors: false,
 			expectedError: `1 error occurred:
 	* downloaded package apt version 1.8.2.3 lower than required 2.0 for update`,
@@ -321,7 +321,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 				{Name: "apt", FixedVersion: "2.0"},
 			},
 			cmp:          dpkgComparer,
-			resultsPath:  "testdata/dpkg_valid.txt",
+			resultsPath:  "../test/data/dpkg_valid.txt",
 			ignoreErrors: true,
 		},
 		{
@@ -330,7 +330,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 				{Name: "apt", FixedVersion: "1.8.2.3"},
 			},
 			cmp:          dpkgComparer,
-			resultsPath:  "testdata/dpkg_valid.txt",
+			resultsPath:  "../test/data/dpkg_valid.txt",
 			ignoreErrors: false,
 		},
 		{
@@ -339,7 +339,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 				{Name: "apt", FixedVersion: "0.9"},
 			},
 			cmp:          dpkgComparer,
-			resultsPath:  "testdata/dpkg_valid.txt",
+			resultsPath:  "../test/data/dpkg_valid.txt",
 			ignoreErrors: false,
 		},
 	}
