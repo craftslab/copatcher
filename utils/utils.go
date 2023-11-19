@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/moby/buildkit/client/llb"
+	"github.com/pkg/errors"
 )
 
 func EnsurePath(path string, perm fs.FileMode) (bool, error) {
@@ -18,10 +19,10 @@ func EnsurePath(path string, perm fs.FileMode) (bool, error) {
 		createdPath = err == nil
 	} else {
 		if !st.IsDir() {
-			return false, fs.ErrExist
+			return false, errors.New(fs.ErrExist.Error())
 		}
 		if st.Mode().Perm() != perm {
-			return false, fs.ErrPermission
+			return false, errors.New(fs.ErrPermission.Error())
 		}
 	}
 

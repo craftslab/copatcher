@@ -2,7 +2,6 @@ package buildkit
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -11,7 +10,7 @@ import (
 	gateway "github.com/moby/buildkit/frontend/gateway/client"
 	"github.com/moby/buildkit/solver/pb"
 	"github.com/moby/buildkit/util/apicaps"
-	log "github.com/sirupsen/logrus"
+	"github.com/pkg/errors"
 
 	"github.com/craftslab/copatcher/buildkit/connhelpers"
 )
@@ -37,7 +36,7 @@ func NewClient(ctx context.Context, bkOpts Opts) (*client.Client, error) {
 
 	clt, err := client.New(ctx, bkOpts.Addr, opts...)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to run new")
 	}
 
 	return clt, nil
@@ -71,10 +70,10 @@ func ValidateClient(ctx context.Context, c *client.Client) error {
 		capset := client.BuildOpts().LLBCaps
 		var err error
 		for _, _cap := range requiredCaps {
-			err = errors.Join(err, capset.Supports(_cap))
+			err = errors.Wrap(err, capset.Supports(_cap).Error())
 		}
 		if err != nil {
-			return nil, errors.Join(err, errMissingCap)
+			return nil, errors.Wrap(err, errMissingCap.Error())
 		}
 		return &gateway.Result{}, nil
 	}, nil)
@@ -97,32 +96,29 @@ func autoClient(ctx context.Context, opts ...client.ClientOpt) (*client.Client, 
 		return nil, err
 	}
 
-	log.Debug("Trying docker driver")
 	h, err := connhelpers.Docker(&url.URL{})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to run docker")
 	}
+
 	c, err := newClient(ctx, h.ContextDialer)
 	if err == nil {
 		return c, nil
 	}
-	log.WithError(err).Debug("Could not use docker driver")
-	retErr = errors.Join(retErr, fmt.Errorf("could not use docker driver: %w", err))
 
-	log.Debug("Trying buildx driver")
+	retErr = errors.Wrap(retErr, "could not use docker driver")
+
 	h, err = connhelpers.Buildx(&url.URL{})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to run buildx")
 	}
 
 	c, err = newClient(ctx, h.ContextDialer)
 	if err == nil {
 		return c, nil
 	}
-	log.WithError(err).Debug("Could not use buildx driver")
-	retErr = errors.Join(retErr, fmt.Errorf("could not use buildx driver: %w", err))
+	retErr = errors.Wrap(retErr, "could not use buildx driver")
 
-	log.Debug("Trying default buildkit addr")
 	c, err = client.New(ctx, DefaultAddr, opts...)
 	if err == nil {
 		err = ValidateClient(ctx, c)
@@ -132,7 +128,5 @@ func autoClient(ctx context.Context, opts ...client.ClientOpt) (*client.Client, 
 		_ = c.Close()
 	}
 
-	log.WithError(err).Debug("Could not use buildkitd driver")
-
-	return nil, errors.Join(retErr, fmt.Errorf("could not use buildkitd driver: %w", err))
+	return nil, errors.Wrap(retErr, "could not use buildkitd driver")
 }

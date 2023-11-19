@@ -8,14 +8,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/go-multierror"
-	debVer "github.com/knqyf263/go-deb-version"
-	"github.com/moby/buildkit/client/llb"
-	log "github.com/sirupsen/logrus"
-
 	"github.com/craftslab/copatcher/buildkit"
 	"github.com/craftslab/copatcher/types"
 	"github.com/craftslab/copatcher/utils"
+	"github.com/hashicorp/go-multierror"
+	debVer "github.com/knqyf263/go-deb-version"
+	"github.com/moby/buildkit/client/llb"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -82,7 +81,6 @@ func getAPTImageName(manifest *types.UpdateManifest) string {
 	}
 
 	// TODO: support qualifying image name with designated repository
-	log.Debugf("Using %s:%s as basis for tooling image", manifest.Metadata.OS.Type, version)
 
 	return fmt.Sprintf("%s:%s", manifest.Metadata.OS.Type, version)
 }
@@ -112,30 +110,29 @@ func (dm *dpkgManager) InstallUpdates(ctx context.Context, manifest *types.Updat
 
 	updates, err := GetUniqueLatestUpdates(manifest.Updates, debComparer, ignoreErrors)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "failed to get updates")
 	}
 
 	if len(updates) == 0 {
-		log.Warn("No update packages were specified to apply")
 		return &dm.config.ImageState, nil, nil
 	}
 
 	// Probe for additional information to execute the appropriate update install graphs
 	toolImageName := getAPTImageName(manifest)
 	if e := dm.probeDPKGStatus(ctx, toolImageName); e != nil {
-		return nil, nil, e
+		return nil, nil, errors.Wrap(e, "failed to probe dpkg status")
 	}
 
 	var updatedImageState *llb.State
 	if dm.isDistroless {
 		updatedImageState, err = dm.unpackAndMergeUpdates(ctx, updates, toolImageName)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.Wrap(err, "failed to unpack and merge updates")
 		}
 	} else {
 		updatedImageState, err = dm.installUpdates(ctx, updates)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.Wrap(err, "failed to install updates")
 		}
 	}
 
@@ -144,7 +141,7 @@ func (dm *dpkgManager) InstallUpdates(ctx context.Context, manifest *types.Updat
 
 	errPkgs, err := validateDebianPackageVersions(updates, debComparer, resultManifestPath, ignoreErrors)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "failed to validate debian package versions")
 	}
 
 	return updatedImageState, errPkgs, nil
@@ -189,16 +186,13 @@ func (dm *dpkgManager) probeDPKGStatus(ctx context.Context, toolImage string) er
 	case DPKGStatusDirectory:
 		statusdNames, err := os.ReadFile(filepath.Join(outStatePath, "status.d"))
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to read file")
 		}
 		dm.statusdNames = strings.ReplaceAll(string(statusdNames), "\n", " ")
-		log.Infof("Processed status.d: %s", dm.statusdNames)
 		dm.isDistroless = true
 		return nil
 	default:
-		err := fmt.Errorf("could not infer DPKG status of target image: %v", dpkgStatus)
-		log.Error(err)
-		return err
+		return errors.New("could not infer DPKG status of target image")
 	}
 }
 
@@ -242,7 +236,7 @@ func (dm *dpkgManager) installUpdates(ctx context.Context, updates types.UpdateP
 	resultsDiff := llb.Diff(aptInstalled, resultsWritten)
 
 	if err := buildkit.SolveToLocal(ctx, dm.config.Client, &resultsDiff, dm.workingFolder); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to solve to local")
 	}
 
 	// Diff the installed updates and merge that into the target image
@@ -300,7 +294,7 @@ func (dm *dpkgManager) unpackAndMergeUpdates(ctx context.Context, updates types.
 	resultsWritten := fieldsWritten.Dir(resultsPath).Run(llb.Shlex(outputResultsCmd)).Root()
 	resultsDiff := llb.Diff(fieldsWritten, resultsWritten)
 	if err := buildkit.SolveToLocal(ctx, dm.config.Client, &resultsDiff, dm.workingFolder); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to solve to local")
 	}
 
 	// Update the status.d folder with the package info from the applied update packages
@@ -346,8 +340,7 @@ func dpkgParseResultsManifest(path string) (map[string]string, error) {
 	// Open result file
 	f, err := os.Open(path)
 	if err != nil {
-		log.Errorf("%s could not be opened", path)
-		return nil, err
+		return nil, errors.Wrap(err, "failed to open file")
 	}
 
 	defer func(f *os.File) {
@@ -367,28 +360,17 @@ func dpkgParseResultsManifest(path string) (map[string]string, error) {
 	for fs.Scan() {
 		kv := strings.Split(fs.Text(), " ")
 		if len(kv) != kvLen {
-			err := fmt.Errorf("unexpected %s file entry: %s", resultManifest, fs.Text())
-			log.Error(err)
-			return nil, err
+			return nil, errors.Wrap(err, "invalid file entry")
 		}
 		switch {
 		case kv[0] == "Package:":
-			if packageName != "" {
-				log.Debugf("ignoring held or not-installed Package without Version: %s", packageName)
-			}
 			packageName = kv[1]
 		case kv[0] == "Version:" && packageName != "":
 			updateMap[packageName] = kv[1]
 			packageName = ""
 		default:
-			err := fmt.Errorf("unexpected field found: %s", fs.Text())
-			log.Error(err)
-			return nil, err
+			return nil, errors.Wrap(err, "invalid field")
 		}
-	}
-
-	if packageName != "" {
-		log.Debugf("ignoring held or not-installed Package without Version: %s", packageName)
 	}
 
 	return updateMap, nil
@@ -399,7 +381,7 @@ func validateDebianPackageVersions(updates types.UpdatePackages, cmp VersionComp
 	// Load file into map[string]string for package:version lookup
 	updateMap, err := dpkgParseResultsManifest(resultsPath)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to parse results manifest")
 	}
 
 	// for each target package, validate version is mapped version is >= requested version
@@ -409,24 +391,20 @@ func validateDebianPackageVersions(updates types.UpdatePackages, cmp VersionComp
 	for _, update := range updates {
 		version, ok := updateMap[update.Name]
 		if !ok {
-			log.Warnf("Package %s is not installed, may have been uninstalled during upgrade", update.Name)
 			continue
 		}
 		if !cmp.IsValid(version) {
-			e := fmt.Errorf("invalid version %s found for package %s", version, update.Name)
-			log.Error(e)
 			errorPkgs = append(errorPkgs, update.Name)
+			e := fmt.Errorf("invalid version %s found for package %s", version, update.Name)
 			allErrors = multierror.Append(allErrors, e)
 			continue
 		}
 		if cmp.LessThan(version, update.FixedVersion) {
-			err = fmt.Errorf("downloaded package %s version %s lower than required %s for update", update.Name, version, update.FixedVersion)
-			log.Error(err)
 			errorPkgs = append(errorPkgs, update.Name)
+			err = fmt.Errorf("downloaded package %s version %s lower than required %s for update", update.Name, version, update.FixedVersion)
 			allErrors = multierror.Append(allErrors, err)
 			continue
 		}
-		log.Infof("Validated package %s version %s meets requested version %s", update.Name, version, update.FixedVersion)
 	}
 
 	if ignoreErrors {

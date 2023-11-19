@@ -9,7 +9,7 @@ import (
 type Report interface {
 	Init(context.Context) error
 	Deinit(context.Context) error
-	Run(context.Context) error
+	Run(context.Context, string) error
 }
 
 type Config struct {
@@ -38,6 +38,6 @@ func (r *report) Deinit(_ context.Context) error {
 	return nil
 }
 
-func (r *report) Run(_ context.Context) error {
+func (r *report) Run(_ context.Context, name string) error {
 	return nil
 }

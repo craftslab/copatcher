@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/moby/buildkit/client/llb"
-	log "github.com/sirupsen/logrus"
+	"github.com/pkg/errors"
 
 	"github.com/craftslab/copatcher/buildkit"
 	"github.com/craftslab/copatcher/types"
@@ -32,7 +32,7 @@ func GetPackageManager(osType string, config *buildkit.Config, workingFolder str
 	case "debian", "ubuntu":
 		return &dpkgManager{config: config, workingFolder: workingFolder}, nil
 	default:
-		return nil, fmt.Errorf("unsupported osType %s specified", osType)
+		return nil, errors.New("unsupported OS type")
 	}
 }
 
@@ -58,14 +58,13 @@ func GetUniqueLatestUpdates(updates types.UpdatePackages, cmp VersionComparer, i
 			}
 		} else {
 			err := fmt.Errorf("invalid version %s found for package %s", u.FixedVersion, u.Name)
-			log.Error(err)
 			allErrors = multierror.Append(allErrors, err)
 			continue
 		}
 	}
 
 	if allErrors != nil && !ignoreErrors {
-		return nil, allErrors.ErrorOrNil()
+		return types.UpdatePackages{}, allErrors.ErrorOrNil()
 	}
 
 	out := types.UpdatePackages{}
@@ -98,11 +97,10 @@ func GetValidatedUpdatesMap(updates types.UpdatePackages, cmp VersionComparer, r
 
 	files, err := os.ReadDir(stagingPath)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to read directory")
 	}
 
 	if len(files) == 0 {
-		log.Warn("No downloaded packages to install")
 		return nil, nil
 	}
 
@@ -121,19 +119,16 @@ func GetValidatedUpdatesMap(updates types.UpdatePackages, cmp VersionComparer, r
 		}
 		if !cmp.IsValid(version) {
 			e := fmt.Errorf("invalid version %s found for package %s", version, name)
-			log.Error(e)
 			allErrors = multierror.Append(allErrors, e)
 			continue
 		}
 		p, ok := m[name]
 		if !ok {
-			log.Warnf("Unexpected: ignoring downloaded update package %s not specified in report", name)
 			_ = os.Remove(filepath.Join(stagingPath, file.Name()))
 			continue
 		}
 		if cmp.LessThan(version, p.Version) {
 			err = fmt.Errorf("downloaded package %s version %s lower than required %s for update", name, version, p.Version)
-			log.Error(err)
 			allErrors = multierror.Append(allErrors, err)
 			continue
 		}

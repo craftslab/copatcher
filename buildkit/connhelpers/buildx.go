@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"math/rand"
 	"net"
 	"net/url"
@@ -18,7 +16,7 @@ import (
 	"github.com/cpuguy83/go-docker/container"
 	"github.com/cpuguy83/go-docker/errdefs"
 	"github.com/moby/buildkit/client/connhelper"
-	log "github.com/sirupsen/logrus"
+	"github.com/pkg/errors"
 )
 
 // nolint: gochecknoinits
@@ -39,7 +37,7 @@ type buildxConfig struct {
 // If there are multiple nodes configured, one will be chosen at random.
 func Buildx(u *url.URL) (*connhelper.ConnectionHelper, error) {
 	if u.Path != "" {
-		return nil, fmt.Errorf("buildx driver does not support path elements: %s", u.Path)
+		return nil, errors.Errorf("buildx driver does not support path elements: %s", u.Path)
 	}
 
 	return &connhelper.ConnectionHelper{
@@ -51,7 +49,7 @@ func buildxContextDialer(builder string) func(context.Context, string) (net.Conn
 	return func(ctx context.Context, _ string) (net.Conn, error) {
 		configPath, err := dockercfg.ConfigPath()
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to config path")
 		}
 
 		if builder == "" {
@@ -64,14 +62,14 @@ func buildxContextDialer(builder string) func(context.Context, string) (net.Conn
 		if builder == "" {
 			dt, e := os.ReadFile(filepath.Join(base, "current"))
 			if e != nil {
-				return nil, e
+				return nil, errors.Wrap(e, "failed to read file")
 			}
 			type ref struct {
 				Name string `json:"name"`
 			}
 			var r ref
 			if e := json.Unmarshal(dt, &r); e != nil {
-				return nil, fmt.Errorf("could not unmarshal buildx config: %w", e)
+				return nil, errors.Wrap(e, "failed to unmarshal buildx config")
 			}
 			builder = r.Name
 		}
@@ -82,33 +80,27 @@ func buildxContextDialer(builder string) func(context.Context, string) (net.Conn
 		cmd.Stderr = errBuf
 		err = cmd.Run()
 		if err != nil {
-			return nil, fmt.Errorf("could not inspect buildx instance: %w: %s", err, errBuf.String())
+			return nil, errors.Wrap(err, "failed to inspect buildx instance")
 		}
 
 		// Read the config from the buildx instance
 		dt, err := os.ReadFile(filepath.Join(base, "instances", builder))
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to read file")
 		}
 
 		var cfg buildxConfig
 		if err := json.Unmarshal(dt, &cfg); err != nil {
-			return nil, fmt.Errorf("could not unmarshal buildx instance config: %w", err)
+			return nil, errors.Wrap(err, "failed to unmarshal buildx instance config")
 		}
 
 		if cfg.Driver != "docker-container" {
-			return nil, fmt.Errorf("unsupported buildx driver: %s", cfg.Driver)
+			return nil, errors.Errorf("unsupported buildx driver: %s", cfg.Driver)
 		}
 
 		if len(cfg.Nodes) == 0 {
 			return nil, errors.New("no nodes configured for buildx instance")
 		}
-
-		log.WithFields(log.Fields{
-			"driver":   cfg.Driver,
-			"endpoint": cfg.Nodes[0].Endpoint,
-			"name":     cfg.Nodes[0].Name,
-		}).Debug("Connect to buildx instance")
 
 		nodes := cfg.Nodes
 		if len(nodes) > 1 {
@@ -124,7 +116,7 @@ func buildxContextDialer(builder string) func(context.Context, string) (net.Conn
 func containerContextDialer(ctx context.Context, host, name string) (net.Conn, error) {
 	tr, err := getDockerTransport(host)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to get docker transport")
 	}
 
 	cli := docker.NewClient(docker.WithTransport(tr))
@@ -140,10 +132,10 @@ func containerContextDialer(ctx context.Context, host, name string) (net.Conn, e
 
 	if err != nil {
 		if errdefs.IsNotFound(err) {
-			return nil, fmt.Errorf("could not find container %s: %w", name, err)
+			return nil, errors.Errorf("could not find container %s: %w", name, err)
 		}
 		if err2 := c.Start(ctx); err2 != nil {
-			return nil, err
+			return nil, errors.Wrap(err2, "failed to run start")
 		}
 		ep, err = c.Exec(ctx, container.WithExecCmd("buildctl", "dial-stdio"), func(cfg *container.ExecConfig) {
 			cfg.Stdin = conn1
@@ -151,12 +143,12 @@ func containerContextDialer(ctx context.Context, host, name string) (net.Conn, e
 			cfg.Stderr = conn1
 		})
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to run exec")
 		}
 	}
 
 	if err := ep.Start(ctx); err != nil {
-		return nil, fmt.Errorf("could not start exec proxy: %w", err)
+		return nil, errors.Errorf("could not start exec proxy: %w", err)
 	}
 
 	return conn2, nil

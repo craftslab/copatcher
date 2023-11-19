@@ -22,7 +22,7 @@ import (
 	"github.com/moby/buildkit/version"
 	"github.com/opencontainers/go-digest"
 	ispec "github.com/opencontainers/image-spec/specs-go/v1"
-	log "github.com/sirupsen/logrus"
+	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/craftslab/copatcher/types"
@@ -57,7 +57,7 @@ func InitializeBuildkitConfig(ctx context.Context, clt *client.Client, image str
 	// Resolve and pull the config for the target image
 	_, configData, err := resolveImageConfig(ctx, image, &cfg.Platform)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to resolve image config")
 	}
 
 	cfg.ConfigData = configData
@@ -69,7 +69,7 @@ func InitializeBuildkitConfig(ctx context.Context, clt *client.Client, image str
 		llb.ResolveModeDefault,
 	).WithImageConfig(cfg.ConfigData)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to load image")
 	}
 
 	cfg.Client = clt
@@ -80,8 +80,7 @@ func InitializeBuildkitConfig(ctx context.Context, clt *client.Client, image str
 func SolveToLocal(ctx context.Context, c *client.Client, st *llb.State, outPath string) error {
 	def, err := st.Marshal(ctx)
 	if err != nil {
-		log.Errorf("st.Marshal failed with %s", err)
-		return err
+		return errors.Wrap(err, "failed to run marshal")
 	}
 
 	dockerConfig := config.LoadDefaultConfigFile(os.Stderr)
@@ -99,7 +98,7 @@ func SolveToLocal(ctx context.Context, c *client.Client, st *llb.State, outPath 
 
 	solveOpt.SourcePolicy, err = build.ReadSourcePolicy()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to read source policy")
 	}
 
 	ch := make(chan *client.SolveStatus)
@@ -122,10 +121,8 @@ func SolveToLocal(ctx context.Context, c *client.Client, st *llb.State, outPath 
 	})
 
 	if err := eg.Wait(); err != nil {
-		return err
+		return errors.Wrap(err, "failed to run wait")
 	}
-
-	log.Debugf("Wrote LLB state to %s", outPath)
 
 	return nil
 }
@@ -133,8 +130,7 @@ func SolveToLocal(ctx context.Context, c *client.Client, st *llb.State, outPath 
 func SolveToDocker(ctx context.Context, c *client.Client, st *llb.State, configData []byte, tag string) error {
 	def, err := st.Marshal(ctx)
 	if err != nil {
-		log.Errorf("st.Marshal failed with %s", err)
-		return err
+		return errors.Wrap(err, "failed to run marshal")
 	}
 
 	pipeR, pipeW := io.Pipe()
@@ -161,7 +157,7 @@ func SolveToDocker(ctx context.Context, c *client.Client, st *llb.State, configD
 
 	solveOpt.SourcePolicy, err = build.ReadSourcePolicy()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to read source policy")
 	}
 
 	ch := make(chan *client.SolveStatus)
@@ -169,7 +165,7 @@ func SolveToDocker(ctx context.Context, c *client.Client, st *llb.State, configD
 
 	eg.Go(func() error {
 		_, e := c.Solve(ctx, def, solveOpt, ch)
-		return e
+		return errors.Wrap(e, "failed to run solve")
 	})
 
 	eg.Go(func() error {
@@ -180,12 +176,12 @@ func SolveToDocker(ctx context.Context, c *client.Client, st *llb.State, configD
 		}
 		// not using shared context to not disrupt display but let us finish reporting errors
 		_, e = progressui.DisplaySolveStatus(context.TODO(), c, os.Stdout, ch)
-		return e
+		return errors.Wrap(e, "failed to display solve status")
 	})
 
 	eg.Go(func() error {
 		if err := dockerLoad(ctx, pipeR); err != nil {
-			return err
+			return errors.Wrap(err, "failed to load docker")
 		}
 		return pipeR.Close()
 	})
@@ -199,12 +195,12 @@ func dockerLoad(ctx context.Context, pipeR io.Reader) error {
 
 	_, err := cmd.StdoutPipe()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to run stdout pipe")
 	}
 
 	_, err = cmd.StderrPipe()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to run stderr pipe")
 	}
 
 	return cmd.Run()
@@ -222,7 +218,7 @@ func resolveImageConfig(ctx context.Context, ref string, platform *ispec.Platfor
 			defaultConfig := config.LoadDefaultConfigFile(os.Stderr)
 			ac, err := defaultConfig.GetAuthConfig(ref)
 			if err != nil {
-				return "", "", err
+				return "", "", errors.Wrap(err, "failed to get auth config")
 			}
 			if ac.IdentityToken != "" {
 				return "", ac.IdentityToken, nil
@@ -247,7 +243,7 @@ func resolveImageConfig(ctx context.Context, ref string, platform *ispec.Platfor
 
 	_, dgst, cfg, err := imageutil.Config(ctx, ref, resolver, contentutil.NewBuffer(), nil, platform, nil)
 	if err != nil {
-		return "", nil, err
+		return "", nil, errors.Wrap(err, "failed to run config")
 	}
 
 	return dgst, cfg, nil

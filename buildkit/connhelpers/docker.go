@@ -11,6 +11,7 @@ import (
 	"github.com/cpuguy83/go-docker/transport"
 	"github.com/cpuguy83/go-docker/version"
 	"github.com/moby/buildkit/client/connhelper"
+	"github.com/pkg/errors"
 )
 
 // nolint: gochecknoinits
@@ -24,7 +25,7 @@ func Docker(u *url.URL) (*connhelper.ConnectionHelper, error) {
 		ContextDialer: func(ctx context.Context, addr string) (net.Conn, error) {
 			tr, err := getDockerTransport(path.Join(u.Host, u.Path))
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "failed to get docker transport")
 			}
 			return tr.DoRaw(ctx, http.MethodPost, version.Join(ctx, "/grpc"), transport.WithUpgrade("h2c"))
 		},
