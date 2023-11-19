@@ -26,7 +26,6 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/craftslab/copatcher/types"
-	"github.com/craftslab/copatcher/utils"
 )
 
 type Config struct {
@@ -198,20 +197,15 @@ func dockerLoad(ctx context.Context, pipeR io.Reader) error {
 	cmd := exec.CommandContext(ctx, "docker", "load")
 	cmd.Stdin = pipeR
 
-	stdout, err := cmd.StdoutPipe()
+	_, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
 	}
 
-	stderr, err := cmd.StderrPipe()
+	_, err = cmd.StderrPipe()
 	if err != nil {
 		return err
 	}
-
-	// Pipe run errors to WarnLevel since execution continues asynchronously
-	// Caller should log a separate ErrorLevel on completion based on err
-	go utils.LogPipe(stderr, log.WarnLevel)
-	go utils.LogPipe(stdout, log.InfoLevel)
 
 	return cmd.Run()
 }

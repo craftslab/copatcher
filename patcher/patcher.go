@@ -22,10 +22,7 @@ import (
 const (
 	DefaultTimeout    = "5m"
 	DefaultPatchedTag = "patched"
-)
-
-const (
-	FolderPerm = 0o744
+	FolderPerm        = 0o744
 )
 
 type Patcher interface {

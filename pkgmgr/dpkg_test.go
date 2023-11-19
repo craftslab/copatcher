@@ -4,14 +4,21 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/craftslab/copatcher/buildkit"
-	"github.com/craftslab/copatcher/test/utils"
 	"github.com/craftslab/copatcher/types"
 )
+
+func createTempFileWithContent(dir, dbType string) {
+	path := filepath.Join(dir, dbType)
+	file, _ := os.Create(path)
+
+	_, _ = file.WriteString("test")
+}
 
 // TestGetPackageManager tests the GetPackageManager function.
 func TestDPKGStatusTypeString(t *testing.T) {
@@ -145,20 +152,20 @@ func TestGetDPKGStatusType(t *testing.T) {
 	}(dir1)
 
 	dir2 := t.TempDir() // directory with status files
-	testutils.CreateTempFileWithContent(dir2, "status")
+	createTempFileWithContent(dir2, "status")
 	defer func(name string) {
 		_ = os.Remove(name)
 	}(dir2)
 
 	dir3 := t.TempDir() // directory with status.d directory
-	testutils.CreateTempFileWithContent(dir3, "status.d")
+	createTempFileWithContent(dir3, "status.d")
 	defer func(name string) {
 		_ = os.Remove(name)
 	}(dir3)
 
 	dir4 := t.TempDir() // directory with status file and status.d directory
-	testutils.CreateTempFileWithContent(dir4, "status")
-	testutils.CreateTempFileWithContent(dir4, "status.d")
+	createTempFileWithContent(dir4, "status")
+	createTempFileWithContent(dir4, "status.d")
 	defer func(name string) {
 		_ = os.Remove(name)
 	}(dir4)
