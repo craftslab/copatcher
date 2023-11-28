@@ -15,7 +15,6 @@ import (
 	"github.com/craftslab/copatcher/config"
 	"github.com/craftslab/copatcher/pkgmgr"
 	"github.com/craftslab/copatcher/report"
-	"github.com/craftslab/copatcher/types"
 	"github.com/craftslab/copatcher/utils"
 )
 
@@ -56,11 +55,17 @@ func DefaultConfig() *Config {
 	return &Config{}
 }
 
-func (p *patcher) Init(_ context.Context) error {
+func (p *patcher) Init(ctx context.Context) error {
+	if err := p.cfg.Report.Init(ctx); err != nil {
+		return errors.Wrap(err, "failed to init report")
+	}
+
 	return nil
 }
 
-func (p *patcher) Deinit(_ context.Context) error {
+func (p *patcher) Deinit(ctx context.Context) error {
+	_ = p.cfg.Report.Deinit(ctx)
+
 	return nil
 }
 
@@ -70,7 +75,7 @@ func (p *patcher) Run(ctx context.Context, name string) error {
 
 	ch := make(chan error)
 	go func() {
-		ch <- p.patch(timeoutCtx)
+		ch <- p.patch(timeoutCtx, name)
 	}()
 
 	select {
@@ -83,7 +88,7 @@ func (p *patcher) Run(ctx context.Context, name string) error {
 }
 
 // nolint: funlen,gocyclo
-func (p *patcher) patch(ctx context.Context) error {
+func (p *patcher) patch(ctx context.Context, name string) error {
 	imageName, err := reference.ParseNamed(p.cfg.Image)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse named")
@@ -117,6 +122,11 @@ func (p *patcher) patch(ctx context.Context) error {
 		}(DefaultFolder)
 	}
 
+	manifest, err := p.cfg.Report.Run(ctx, name)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse report")
+	}
+
 	_client, err := buildkit.NewClient(ctx, p.opts)
 	if err != nil {
 		return errors.Wrap(err, "failed to create new client")
@@ -126,7 +136,7 @@ func (p *patcher) patch(ctx context.Context) error {
 		_ = c.Close()
 	}(_client)
 
-	_config, err := buildkit.InitializeBuildkitConfig(ctx, _client, p.cfg.Image, manifest)
+	_config, err := buildkit.InitializeBuildkitConfig(ctx, _client, p.cfg.Image, &manifest)
 	if err != nil {
 		return errors.Wrap(err, "failed to init buildkit config")
 	}
@@ -136,8 +146,7 @@ func (p *patcher) patch(ctx context.Context) error {
 		return errors.Wrap(err, "failed to get package manager")
 	}
 
-	// TODO: Add support for other output modes as buildctl does.
-	patchedImageState, errPkgs, err := _pkgmgr.InstallUpdates(ctx, manifest, p.cfg.IgnoreErrors)
+	patchedImageState, errPkgs, err := _pkgmgr.InstallUpdates(ctx, &manifest, p.cfg.IgnoreErrors)
 	if err != nil {
 		return errors.Wrap(err, "failed to install updates")
 	}
@@ -146,22 +155,9 @@ func (p *patcher) patch(ctx context.Context) error {
 		return errors.Wrap(err, "failed to solve to docker")
 	}
 
-	validatedManifest := &types.UpdateManifest{
-		Metadata: types.Metadata{
-			OS: types.OS{
-				Type:    manifest.Metadata.OS.Type,
-				Version: manifest.Metadata.OS.Version,
-			},
-			Config: types.Config{
-				Arch: manifest.Metadata.Config.Arch,
-			},
-		},
-		Updates: []types.UpdatePackage{},
-	}
-
 	for _, update := range manifest.Updates {
 		if !slices.Contains(errPkgs, update.Name) {
-			validatedManifest.Updates = append(validatedManifest.Updates, update)
+			// TODO: FIXME
 		}
 	}
 

@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/craftslab/copatcher/config"
+	"github.com/craftslab/copatcher/types"
 )
 
 type Report interface {
 	Init(context.Context) error
 	Deinit(context.Context) error
-	Run(context.Context, string) error
+	Run(context.Context, string) (types.UpdateManifest, error)
 }
 
 type Config struct {
@@ -38,6 +39,11 @@ func (r *report) Deinit(_ context.Context) error {
 	return nil
 }
 
-func (r *report) Run(_ context.Context, name string) error {
-	return nil
+func (r *report) Run(_ context.Context, name string) (types.UpdateManifest, error) {
+	buf := types.UpdateManifest{
+		Metadata: types.Metadata{},
+		Updates:  types.UpdatePackages{},
+	}
+
+	return buf, nil
 }

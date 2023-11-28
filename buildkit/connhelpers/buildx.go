@@ -132,7 +132,7 @@ func containerContextDialer(ctx context.Context, host, name string) (net.Conn, e
 
 	if err != nil {
 		if errdefs.IsNotFound(err) {
-			return nil, errors.Errorf("could not find container %s: %w", name, err)
+			return nil, errors.Wrapf(err, "could not find container %s", name)
 		}
 		if err2 := c.Start(ctx); err2 != nil {
 			return nil, errors.Wrap(err2, "failed to run start")
@@ -148,7 +148,7 @@ func containerContextDialer(ctx context.Context, host, name string) (net.Conn, e
 	}
 
 	if err := ep.Start(ctx); err != nil {
-		return nil, errors.Errorf("could not start exec proxy: %w", err)
+		return nil, errors.Wrap(err, "could not start exec proxy")
 	}
 
 	return conn2, nil

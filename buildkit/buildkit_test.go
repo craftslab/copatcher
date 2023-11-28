@@ -233,7 +233,4 @@ func TestNewClient(t *testing.T) {
 			assert.NoError(t, err)
 		})
 	})
-
-	// TODO: Test with defaults, but then we need to control those socket paths.
-	// I considered doing this in a chroot, but it is fairly complicated to do so and requires root privileges anyway (or CAP_SYS_CHROOT).
 }
