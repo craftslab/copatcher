@@ -45,7 +45,7 @@ func Buildx(u *url.URL) (*connhelper.ConnectionHelper, error) {
 	}, nil
 }
 
-func buildxContextDialer(builder string) func(context.Context, string) (net.Conn, error) {
+func buildxContextDialer(builder string) func(ctx context.Context, _ string) (net.Conn, error) {
 	return func(ctx context.Context, _ string) (net.Conn, error) {
 		configPath, err := dockercfg.ConfigPath()
 		if err != nil {

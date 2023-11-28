@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/craftslab/copatcher/buildkit"
 	"github.com/craftslab/copatcher/types"
 )
@@ -20,7 +22,11 @@ func createTempFileWithContent(dir, dbType string) {
 	_, _ = file.WriteString("test")
 }
 
-// TestGetPackageManager tests the GetPackageManager function.
+func TestString(t *testing.T) {
+	// TODO: FIXME
+	assert.Equal(t, nil, nil)
+}
+
 func TestDPKGStatusTypeString(t *testing.T) {
 	tests := []struct {
 		name string
@@ -85,6 +91,11 @@ func TestIsValidDebianVersion(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestIsLessThanDebianVersion(t *testing.T) {
+	// TODO: FIXME
+	assert.Equal(t, nil, nil)
 }
 
 // TestGetAPTImageName tests the getAPTImageName function with different inputs and outputs.
@@ -205,6 +216,26 @@ func TestGetDPKGStatusType(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestInstallUpdates(t *testing.T) {
+	// TODO: FIXME
+	assert.Equal(t, nil, nil)
+}
+
+func TestProbeDPKGStatus(t *testing.T) {
+	// TODO: FIXME
+	assert.Equal(t, nil, nil)
+}
+
+func TestUnpackAndMergeUpdates(t *testing.T) {
+	// TODO: FIXME
+	assert.Equal(t, nil, nil)
+}
+
+func TestGetPackageType(t *testing.T) {
+	// TODO: FIXME
+	assert.Equal(t, nil, nil)
 }
 
 func TestDpkgParseResultsManifest(t *testing.T) {

@@ -45,5 +45,7 @@ func (r *report) Run(_ context.Context, name string) (types.UpdateManifest, erro
 		Updates:  types.UpdatePackages{},
 	}
 
+	// TODO: FIXME
+
 	return buf, nil
 }

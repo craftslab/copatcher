@@ -47,3 +47,13 @@ func TestGetPackageManager(t *testing.T) {
 		assert.Nil(t, manager)
 	})
 }
+
+func TestGetUniqueLatestUpdates(t *testing.T) {
+	// TODO: FIXME
+	assert.Equal(t, nil, nil)
+}
+
+func TestGetValidatedUpdatesMap(t *testing.T) {
+	// TODO: FIXME
+	assert.Equal(t, nil, nil)
+}

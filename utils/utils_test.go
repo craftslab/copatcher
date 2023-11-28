@@ -183,3 +183,7 @@ func TestGetProxy(t *testing.T) {
 		t.Errorf("unexpected proxy config, got %#v want %#v", got, want)
 	}
 }
+
+func TestGetEnvAny(t *testing.T) {
+	// TODO: FIXME
+}

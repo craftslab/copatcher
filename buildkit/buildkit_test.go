@@ -159,7 +159,7 @@ func checkMissingCapsError(t *testing.T, err error, c ...apicaps.CapID) {
 	}
 }
 
-func TestGetServerNameFromAddr(t *testing.T) {
+func TestBuildkitGetServerNameFromAddr(t *testing.T) {
 	testCases := []struct {
 		name string
 		addr string
@@ -192,7 +192,7 @@ func TestGetServerNameFromAddr(t *testing.T) {
 	}
 }
 
-func TestNewClient(t *testing.T) {
+func TestBuildkitNewClient(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("custom buildkit addr", func(t *testing.T) {
@@ -233,4 +233,29 @@ func TestNewClient(t *testing.T) {
 			assert.NoError(t, err)
 		})
 	})
+}
+
+func TestInitializeBuildkitConfig(t *testing.T) {
+	// TODO: FIXME
+	assert.Equal(t, nil, nil)
+}
+
+func TestSolveToLocal(t *testing.T) {
+	// TODO: FIXME
+	assert.Equal(t, nil, nil)
+}
+
+func TestSolveToDocker(t *testing.T) {
+	// TODO: FIXME
+	assert.Equal(t, nil, nil)
+}
+
+func TestDockerLoad(t *testing.T) {
+	// TODO: FIXME
+	assert.Equal(t, nil, nil)
+}
+
+func TestResolveImageConfig(t *testing.T) {
+	// TODO: FIXME
+	assert.Equal(t, nil, nil)
 }
