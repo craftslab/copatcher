@@ -3,7 +3,6 @@ package buildkit
 import (
 	"context"
 	"fmt"
-	"net"
 	"net/url"
 
 	"github.com/moby/buildkit/client"
@@ -11,8 +10,6 @@ import (
 	"github.com/moby/buildkit/solver/pb"
 	"github.com/moby/buildkit/util/apicaps"
 	"github.com/pkg/errors"
-
-	"github.com/craftslab/copatcher/buildkit/connhelpers"
 )
 
 const (
@@ -28,10 +25,6 @@ var (
 // NewClient returns a new buildkit client with the given addr.
 // If addr is empty it will first try to connect to docker's buildkit instance and then fallback to DefaultAddr.
 func NewClient(ctx context.Context, bkOpts Opts) (*client.Client, error) {
-	if bkOpts.Addr == "" {
-		return autoClient(ctx)
-	}
-
 	opts := getCredentialOptions(bkOpts)
 
 	clt, err := client.New(ctx, bkOpts.Addr, opts...)
@@ -79,54 +72,4 @@ func ValidateClient(ctx context.Context, c *client.Client) error {
 	}, nil)
 
 	return err
-}
-
-func autoClient(ctx context.Context, opts ...client.ClientOpt) (*client.Client, error) {
-	var retErr error
-
-	newClient := func(ctx context.Context, dialer func(context.Context, string) (net.Conn, error)) (*client.Client, error) {
-		_client, err := client.New(ctx, "", append(opts, client.WithContextDialer(dialer))...)
-		if err == nil {
-			err = ValidateClient(ctx, _client)
-			if err == nil {
-				return _client, nil
-			}
-			_ = _client.Close()
-		}
-		return nil, err
-	}
-
-	h, err := connhelpers.Docker(&url.URL{})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to run docker")
-	}
-
-	c, err := newClient(ctx, h.ContextDialer)
-	if err == nil {
-		return c, nil
-	}
-
-	retErr = errors.Wrap(retErr, "could not use docker driver")
-
-	h, err = connhelpers.Buildx(&url.URL{})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to run buildx")
-	}
-
-	c, err = newClient(ctx, h.ContextDialer)
-	if err == nil {
-		return c, nil
-	}
-	retErr = errors.Wrap(retErr, "could not use buildx driver")
-
-	c, err = client.New(ctx, DefaultAddr, opts...)
-	if err == nil {
-		err = ValidateClient(ctx, c)
-		if err == nil {
-			return c, nil
-		}
-		_ = c.Close()
-	}
-
-	return nil, errors.Wrap(retErr, "could not use buildkitd driver")
 }

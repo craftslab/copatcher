@@ -6,8 +6,6 @@ require (
 	github.com/alecthomas/kingpin/v2 v2.3.2
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.7.8
-	github.com/cpuguy83/dockercfg v0.3.1
-	github.com/cpuguy83/go-docker v0.2.1
 	github.com/distribution/reference v0.5.0
 	github.com/docker/buildx v0.11.2
 	github.com/docker/cli v24.0.7+incompatible
@@ -128,6 +126,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gotest.tools/v3 v3.3.0 // indirect
 	k8s.io/apimachinery v0.26.2 // indirect
 	k8s.io/client-go v0.26.2 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
