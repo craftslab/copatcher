@@ -1,0 +1,12 @@
+{
+  "metadata": {
+    "os": {
+      "type": "ubuntu",
+      "version": "22.04"
+    },
+    "config": {
+      "arch": "amd64"
+    }
+  },
+  "updates": null
+}
