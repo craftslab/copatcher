@@ -49,15 +49,15 @@ func GetUniqueLatestUpdates(updates types.UpdatePackages, cmp VersionComparer, i
 	var allErrors *multierror.Error
 
 	for _, u := range updates {
-		if cmp.IsValid(u.FixedVersion) {
+		if cmp.IsValid(u.UpdatedVersion) {
 			ver, ok := dict[u.Name]
 			if !ok {
-				dict[u.Name] = u.FixedVersion
-			} else if cmp.LessThan(ver, u.FixedVersion) {
-				dict[u.Name] = u.FixedVersion
+				dict[u.Name] = u.UpdatedVersion
+			} else if cmp.LessThan(ver, u.UpdatedVersion) {
+				dict[u.Name] = u.UpdatedVersion
 			}
 		} else {
-			err := fmt.Errorf("invalid version %s found for package %s", u.FixedVersion, u.Name)
+			err := fmt.Errorf("invalid version %s found for package %s", u.UpdatedVersion, u.Name)
 			allErrors = multierror.Append(allErrors, err)
 			continue
 		}
@@ -69,7 +69,7 @@ func GetUniqueLatestUpdates(updates types.UpdatePackages, cmp VersionComparer, i
 
 	out := types.UpdatePackages{}
 	for k, v := range dict {
-		out = append(out, types.UpdatePackage{Name: k, FixedVersion: v})
+		out = append(out, types.UpdatePackage{Name: k, UpdatedVersion: v})
 	}
 
 	return out, nil
@@ -92,7 +92,7 @@ func GetValidatedUpdatesMap(updates types.UpdatePackages, cmp VersionComparer, r
 	m := make(UpdateMap)
 
 	for _, update := range updates {
-		m[update.Name] = &UpdatePackageInfo{Version: update.FixedVersion}
+		m[update.Name] = &UpdatePackageInfo{Version: update.UpdatedVersion}
 	}
 
 	files, err := os.ReadDir(stagingPath)

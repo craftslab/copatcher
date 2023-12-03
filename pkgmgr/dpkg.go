@@ -395,9 +395,9 @@ func validateDebianPackageVersions(updates types.UpdatePackages, cmp VersionComp
 			allErrors = multierror.Append(allErrors, e)
 			continue
 		}
-		if cmp.LessThan(version, update.FixedVersion) {
+		if cmp.LessThan(version, update.UpdatedVersion) {
 			errorPkgs = append(errorPkgs, update.Name)
-			err = fmt.Errorf("downloaded package %s version %s lower than required %s for update", update.Name, version, update.FixedVersion)
+			err = fmt.Errorf("downloaded package %s version %s lower than required %s for update", update.Name, version, update.UpdatedVersion)
 			allErrors = multierror.Append(allErrors, err)
 			continue
 		}

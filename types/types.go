@@ -10,7 +10,7 @@ type UpdatePackages []UpdatePackage
 type UpdatePackage struct {
 	Name             string `json:"name"`
 	InstalledVersion string `json:"installedVersion"`
-	FixedVersion     string `json:"fixedVersion"`
+	UpdatedVersion   string `json:"updatedVersion"`
 }
 
 type Metadata struct {

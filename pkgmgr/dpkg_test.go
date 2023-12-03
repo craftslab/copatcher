@@ -309,7 +309,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 		{
 			name: "package not installed",
 			updates: types.UpdatePackages{
-				{Name: "not-installed", FixedVersion: "1.0.0"},
+				{Name: "not-installed", UpdatedVersion: "1.0.0"},
 			},
 			cmp:          dpkgComparer,
 			resultsPath:  "../test/data/dpkg_valid.txt",
@@ -318,7 +318,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 		{
 			name: "invalid version",
 			updates: types.UpdatePackages{
-				{Name: "base-files", FixedVersion: "1.0.0"},
+				{Name: "base-files", UpdatedVersion: "1.0.0"},
 			},
 			cmp:           dpkgComparer,
 			resultsPath:   "../test/data/dpkg_invalid.txt",
@@ -328,7 +328,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 		{
 			name: "invalid version with ignore errors",
 			updates: types.UpdatePackages{
-				{Name: "base-files", FixedVersion: "1.0.0"},
+				{Name: "base-files", UpdatedVersion: "1.0.0"},
 			},
 			cmp:          dpkgComparer,
 			resultsPath:  "../test/data/dpkg_valid.txt",
@@ -337,7 +337,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 		{
 			name: "version lower than requested",
 			updates: types.UpdatePackages{
-				{Name: "apt", FixedVersion: "2.0"},
+				{Name: "apt", UpdatedVersion: "2.0"},
 			},
 			cmp:          dpkgComparer,
 			resultsPath:  "../test/data/dpkg_valid.txt",
@@ -349,7 +349,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 		{
 			name: "version lower than requested with ignore errors",
 			updates: types.UpdatePackages{
-				{Name: "apt", FixedVersion: "2.0"},
+				{Name: "apt", UpdatedVersion: "2.0"},
 			},
 			cmp:          dpkgComparer,
 			resultsPath:  "../test/data/dpkg_valid.txt",
@@ -358,7 +358,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 		{
 			name: "version equal to requested",
 			updates: types.UpdatePackages{
-				{Name: "apt", FixedVersion: "1.8.2.3"},
+				{Name: "apt", UpdatedVersion: "1.8.2.3"},
 			},
 			cmp:          dpkgComparer,
 			resultsPath:  "../test/data/dpkg_valid.txt",
@@ -367,7 +367,7 @@ func TestValidateDebianPackageVersions(t *testing.T) {
 		{
 			name: "version greater than requested",
 			updates: types.UpdatePackages{
-				{Name: "apt", FixedVersion: "0.9"},
+				{Name: "apt", UpdatedVersion: "0.9"},
 			},
 			cmp:          dpkgComparer,
 			resultsPath:  "../test/data/dpkg_valid.txt",
