@@ -127,4 +127,5 @@ Project License can be found [here](LICENSE).
 
 - [container-diff](https://github.com/GoogleContainerTools/container-diff)
 - [copacetic](https://project-copacetic.github.io/copacetic/website/)
+- [dfimage](https://github.com/alpine-docker/dfimage)
 - [dockerfile-generator](https://www.startwithdocker.com/)
