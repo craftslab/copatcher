@@ -8,7 +8,7 @@ on:
     branches: [ main ]
 
 env:
-  BUILDKIT_VERSION: 0.12.0
+  BUILDKIT_VERSION: 0.13.0
 
 jobs:
   go-mod:
@@ -17,7 +17,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.20'
+          go-version: '1.22'
       - name: Checkout code
         uses: actions/checkout@v2
         with:
@@ -42,7 +42,7 @@ jobs:
     strategy:
       matrix:
         golang:
-          - '1.20'
+          - '1.22'
     steps:
       - uses: actions/checkout@v2
         with:
